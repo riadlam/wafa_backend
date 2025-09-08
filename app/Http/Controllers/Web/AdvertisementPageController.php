@@ -6,6 +6,9 @@ use App\Http\Controllers\Controller;
 use App\Jobs\DispatchAdvertisementJob;
 use App\Models\Advertisement;
 use App\Models\AdvertisementAudit;
+use App\Models\User;
+use App\Models\Shop;
+use App\Services\FcmService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
@@ -81,6 +84,76 @@ class AdvertisementPageController extends Controller
         });
 
         return redirect()->back()->with('success', 'Advertisement rejected');
+    }
+
+    public function notifyOwners(Request $request, FcmService $fcm)
+    {
+        $data = $request->validate([
+            'title' => 'required|string|max:120',
+            'description' => 'required|string|max:500',
+        ]);
+
+        $ownerIds = Shop::query()->pluck('user_id')->unique()->values();
+        if ($ownerIds->isEmpty()) {
+            return redirect()->back();
+        }
+
+        $tokens = User::whereIn('id', $ownerIds)
+            ->pluck('fcm_tokens')
+            ->filter()
+            ->flatten()
+            ->unique()
+            ->values()
+            ->toArray();
+
+        $projectId = env('FCM_PROJECT_ID');
+        if (!$projectId || empty($tokens)) {
+            return redirect()->back();
+        }
+
+        $accessToken = $fcm->getAccessToken();
+        $sent = 0; $failed = 0;
+        foreach ($tokens as $t) {
+            $ok = $fcm->sendToToken($projectId, $accessToken, $t, $data['title'], $data['description']);
+            if ($ok) $sent++; else $failed++;
+        }
+
+        return redirect()->back();
+    }
+
+    public function notifyUsers(Request $request, FcmService $fcm)
+    {
+        $data = $request->validate([
+            'title' => 'required|string|max:120',
+            'description' => 'required|string|max:500',
+        ]);
+
+        $ownerIds = Shop::query()->pluck('user_id')->unique()->values();
+        $query = User::query();
+        if ($ownerIds->isNotEmpty()) {
+            $query->whereNotIn('id', $ownerIds);
+        }
+
+        $tokens = $query->pluck('fcm_tokens')
+            ->filter()
+            ->flatten()
+            ->unique()
+            ->values()
+            ->toArray();
+
+        $projectId = env('FCM_PROJECT_ID');
+        if (!$projectId || empty($tokens)) {
+            return redirect()->back();
+        }
+
+        $accessToken = $fcm->getAccessToken();
+        $sent = 0; $failed = 0;
+        foreach ($tokens as $t) {
+            $ok = $fcm->sendToToken($projectId, $accessToken, $t, $data['title'], $data['description']);
+            if ($ok) $sent++; else $failed++;
+        }
+
+        return redirect()->back();
     }
 }
 

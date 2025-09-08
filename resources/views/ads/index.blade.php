@@ -29,6 +29,38 @@
   </head>
   <body>
     <div class="container">
+      <div class="card" style="margin-bottom:16px;">
+        <h2 style="margin:0 0 8px; font-size:16px;">Send notification to shop owners</h2>
+        <form method="POST" action="/notify/owners" style="display:flex; gap:8px; flex-wrap:wrap; align-items:flex-end;">
+          @csrf
+          <div style="flex:1 1 240px;">
+            <label class="muted">Title</label>
+            <input name="title" required maxlength="120" style="width:100%; padding:10px 12px; border:1px solid #e5e7eb; border-radius:8px;" />
+          </div>
+          <div style="flex:2 1 360px;">
+            <label class="muted">Description</label>
+            <input name="description" required maxlength="500" style="width:100%; padding:10px 12px; border:1px solid #e5e7eb; border-radius:8px;" />
+          </div>
+          <button type="submit" style="padding:10px 14px; border:none; border-radius:8px; background:#111827; color:#fff; cursor:pointer;">Send to owners</button>
+        </form>
+      </div>
+
+      <div class="card" style="margin-bottom:16px;">
+        <h2 style="margin:0 0 8px; font-size:16px;">Send notification to users</h2>
+        <form method="POST" action="/notify/users" style="display:flex; gap:8px; flex-wrap:wrap; align-items:flex-end;">
+          @csrf
+          <div style="flex:1 1 240px;">
+            <label class="muted">Title</label>
+            <input name="title" required maxlength="120" style="width:100%; padding:10px 12px; border:1px solid #e5e7eb; border-radius:8px;" />
+          </div>
+          <div style="flex:2 1 360px;">
+            <label class="muted">Description</label>
+            <input name="description" required maxlength="500" style="width:100%; padding:10px 12px; border:1px solid #e5e7eb; border-radius:8px;" />
+          </div>
+          <button type="submit" style="padding:10px 14px; border:none; border-radius:8px; background:#111827; color:#fff; cursor:pointer;">Send to users</button>
+        </form>
+      </div>
+
       <h1 style="font-size:20px; font-weight:700; color:#111827; margin:0 0 12px;">Received Advertisements</h1>
       <div class="toolbar">
         <a href="/" class="{{ $status ? '' : 'active' }}">All</a>
