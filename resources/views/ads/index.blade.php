@@ -50,6 +50,7 @@
               <th>Targets</th>
               <th>Delivered</th>
               <th>Created</th>
+              <th>Actions</th>
             </tr>
           </thead>
           <tbody>
@@ -65,6 +66,21 @@
                 <td>{{ $ad->target_count }}</td>
                 <td>{{ $ad->delivered_count }}</td>
                 <td class="muted">{{ $ad->created_at->diffForHumans() }}</td>
+                <td>
+                  @if($ad->status === 'pending')
+                    <form method="POST" action="/ads/{{ $ad->id }}/approve" style="display:inline-block; margin-right:6px;">
+                      @csrf
+                      <button type="submit" style="padding:6px 10px; border:none; border-radius:8px; background:#111827; color:#fff; cursor:pointer;">Approve</button>
+                    </form>
+                    <form method="POST" action="/ads/{{ $ad->id }}/reject" style="display:inline-block;">
+                      @csrf
+                      <input type="hidden" name="reason" value="Rejected from web dashboard">
+                      <button type="submit" style="padding:6px 10px; border:none; border-radius:8px; background:#f43f5e; color:#fff; cursor:pointer;">Reject</button>
+                    </form>
+                  @else
+                    <span class="muted">—</span>
+                  @endif
+                </td>
               </tr>
             @empty
               <tr><td colspan="8" class="muted">No advertisements yet.</td></tr>
