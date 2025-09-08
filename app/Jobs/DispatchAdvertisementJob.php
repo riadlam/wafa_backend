@@ -74,7 +74,7 @@ class DispatchAdvertisementJob implements ShouldQueue
 
         $sent = 0; $failed = 0;
         foreach ($tokens as $token) {
-            $ok = app(FcmService::class)->sendToToken($projectId, $accessToken, $token, $ad->title, $ad->description);
+            $ok = app(FcmService::class)->sendToToken($projectId, $accessToken, $token, $ad->title, $ad->description, '/admin/dashboard');
             if ($ok) $sent++; else $failed++;
         }
 

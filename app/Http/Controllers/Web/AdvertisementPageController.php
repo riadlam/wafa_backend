@@ -114,7 +114,7 @@ class AdvertisementPageController extends Controller
         $accessToken = $fcm->getAccessToken();
         $sent = 0; $failed = 0;
         foreach ($tokens as $t) {
-            $ok = $fcm->sendToToken($projectId, $accessToken, $t, $data['title'], $data['description'], '/dashboard');
+            $ok = $fcm->sendToToken($projectId, $accessToken, $t, $data['title'], $data['description'], '/admin/dashboard');
             if ($ok) $sent++; else $failed++;
         }
 
