@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Http;
+use App\Services\FcmService;
 use App\Models\UserLoyaltyCard;
 use App\Models\LoyaltyCard;
 use App\Models\Shop;
@@ -72,8 +73,9 @@ class FcmTokenController extends Controller
         $token = $tokens[0];
         
         // Use FCM HTTP v1 API
+        $accessToken = app(FcmService::class)->getAccessToken();
         $response = Http::withHeaders([
-            'Authorization' => 'Bearer ' . $this->getAccessToken(),
+            'Authorization' => 'Bearer ' . $accessToken,
             'Content-Type' => 'application/json',
         ])->post("https://fcm.googleapis.com/v1/projects/{$projectId}/messages:send", [
             'message' => [
@@ -108,50 +110,6 @@ class FcmTokenController extends Controller
         }
     }
 
-    private function getAccessToken()
-    {
-        $serviceAccountPath = storage_path(env('FCM_SERVICE_ACCOUNT_PATH', 'firebase-service-account.json'));
-        
-        if (!file_exists($serviceAccountPath)) {
-            throw new \Exception('Firebase service account file not found');
-        }
-        
-        $serviceAccount = json_decode(file_get_contents($serviceAccountPath), true);
-        
-        // Create JWT token for Google OAuth2
-        $now = time();
-        $payload = [
-            'iss' => $serviceAccount['client_email'],
-            'scope' => 'https://www.googleapis.com/auth/firebase.messaging',
-            'aud' => 'https://oauth2.googleapis.com/token',
-            'iat' => $now,
-            'exp' => $now + 3600,
-        ];
-        
-        $header = json_encode(['typ' => 'JWT', 'alg' => 'RS256']);
-        $payload = json_encode($payload);
-        
-        $base64Header = str_replace(['+', '/', '='], ['-', '_', ''], base64_encode($header));
-        $base64Payload = str_replace(['+', '/', '='], ['-', '_', ''], base64_encode($payload));
-        
-        $signature = '';
-        openssl_sign($base64Header . '.' . $base64Payload, $signature, $serviceAccount['private_key'], 'SHA256');
-        $base64Signature = str_replace(['+', '/', '='], ['-', '_', ''], base64_encode($signature));
-        
-        $jwt = $base64Header . '.' . $base64Payload . '.' . $base64Signature;
-        
-        // Exchange JWT for access token
-        $response = Http::asForm()->post('https://oauth2.googleapis.com/token', [
-            'grant_type' => 'urn:ietf:params:oauth:grant-type:jwt-bearer',
-            'assertion' => $jwt,
-        ]);
-        
-        if ($response->successful()) {
-            return $response->json()['access_token'];
-        }
-        
-        throw new \Exception('Failed to get access token: ' . $response->body());
-    }
 
     public function sendShopAdvertise(Request $request)
     {
@@ -205,7 +163,7 @@ class FcmTokenController extends Controller
             return response()->json(['message' => 'FCM project ID not configured'], 500);
         }
 
-        $accessToken = $this->getAccessToken();
+        $accessToken = app(FcmService::class)->getAccessToken();
 
         $sent = 0; $failed = 0;
         foreach ($tokens as $token) {

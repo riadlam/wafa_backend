@@ -13,6 +13,7 @@ use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Facades\Http;
+use App\Services\FcmService;
 
 class DispatchAdvertisementJob implements ShouldQueue
 {
@@ -69,29 +70,12 @@ class DispatchAdvertisementJob implements ShouldQueue
             return;
         }
 
-        $accessToken = app(\App\Http\Controllers\Api\FcmTokenController::class)->getAccessToken();
+        $accessToken = app(FcmService::class)->getAccessToken();
 
         $sent = 0; $failed = 0;
         foreach ($tokens as $token) {
-            $resp = Http::withHeaders([
-                'Authorization' => 'Bearer ' . $accessToken,
-                'Content-Type' => 'application/json',
-            ])->post("https://fcm.googleapis.com/v1/projects/{$projectId}/messages:send", [
-                'message' => [
-                    'token' => $token,
-                    'notification' => [
-                        'title' => $ad->title,
-                        'body' => $ad->description,
-                    ],
-                    'data' => [
-                        'type' => 'shop_advertise',
-                        'route' => '/cards',
-                    ],
-                    'android' => [ 'notification' => [ 'sound' => 'default' ] ],
-                ],
-            ]);
-
-            if ($resp->successful()) $sent++; else $failed++;
+            $ok = app(FcmService::class)->sendToToken($projectId, $accessToken, $token, $ad->title, $ad->description);
+            if ($ok) $sent++; else $failed++;
         }
 
         $ad->delivered_count = $sent;
