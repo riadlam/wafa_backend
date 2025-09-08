@@ -11,6 +11,8 @@ use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\QrScanController;
 use App\Http\Controllers\Api\RedemptionStatisticController;
 use App\Http\Controllers\Api\FcmTokenController;
+use App\Http\Controllers\Api\AdvertisementController;
+use App\Http\Controllers\Api\Admin\AdvertisementModerationController;
 use App\Events\MessageSent;
 use Illuminate\Http\Request;
 
@@ -59,6 +61,12 @@ Route::middleware(['jwt.verify'])->group(function () {
     // FCM tokens
     Route::post('/user/fcm-tokens', [FcmTokenController::class, 'store']);
     Route::post('/user/send-test-notification', [FcmTokenController::class, 'sendTestNotification']);
+    Route::post('/user/advertise', [FcmTokenController::class, 'sendShopAdvertise']);
+
+    // Advertisements (owner)
+    Route::post('/advertisements', [AdvertisementController::class, 'store']);
+    Route::get('/advertisements/mine', [AdvertisementController::class, 'myIndex']);
+    Route::get('/advertisements/mine/daily-usage', [AdvertisementController::class, 'myDailyUsage']);
 
     // Redemption Statistics
     Route::post('/shop-redemptions', [RedemptionStatisticController::class, 'shopRedemptions']);
@@ -98,4 +106,11 @@ Route::middleware(['jwt.verify'])->group(function () {
         Route::put('/categories/{category}', [CategoryController::class, 'update']);
         Route::delete('/categories/{category}', [CategoryController::class, 'destroy']);
     });
+});
+
+// Admin moderation routes (protect with admin middleware/policy as appropriate)
+Route::middleware(['jwt.verify'])->group(function () {
+    Route::get('/admin/advertisements', [AdvertisementModerationController::class, 'index']);
+    Route::post('/admin/advertisements/{id}/approve', [AdvertisementModerationController::class, 'approve']);
+    Route::post('/admin/advertisements/{id}/reject', [AdvertisementModerationController::class, 'reject']);
 });

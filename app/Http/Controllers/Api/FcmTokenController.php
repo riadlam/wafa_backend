@@ -6,6 +6,9 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Http;
+use App\Models\UserLoyaltyCard;
+use App\Models\LoyaltyCard;
+use App\Models\Shop;
 
 class FcmTokenController extends Controller
 {
@@ -148,6 +151,93 @@ class FcmTokenController extends Controller
         }
         
         throw new \Exception('Failed to get access token: ' . $response->body());
+    }
+
+    public function sendShopAdvertise(Request $request)
+    {
+        $user = $request->user();
+        if (!$user) {
+            return response()->json(['message' => 'Unauthenticated'], 401);
+        }
+
+        $validated = $request->validate([
+            'title' => 'required|string|max:120',
+            'description' => 'required|string|max:500',
+        ]);
+
+        // Find shops owned by user, then their loyalty cards
+        $shopIds = Shop::where('user_id', $user->id)->pluck('id');
+        if ($shopIds->isEmpty()) {
+            return response()->json(['message' => 'No shops found for this owner'], 404);
+        }
+
+        $loyaltyCardIds = LoyaltyCard::whereIn('shop_id', $shopIds)->pluck('id');
+        if ($loyaltyCardIds->isEmpty()) {
+            return response()->json(['message' => 'No loyalty cards found for shops'], 404);
+        }
+
+        // Get subscribers who have stamps for these loyalty cards
+        $userIds = UserLoyaltyCard::whereIn('loyalty_card_id', $loyaltyCardIds)
+            ->where('active_stamps', '>', 0)
+            ->pluck('user_id')
+            ->unique()
+            ->values();
+
+        if ($userIds->isEmpty()) {
+            return response()->json(['message' => 'No eligible subscribers found'], 200);
+        }
+
+        // Collect FCM tokens for these users
+        $tokens = \App\Models\User::whereIn('id', $userIds)
+            ->pluck('fcm_tokens')
+            ->filter()
+            ->flatten()
+            ->unique()
+            ->values()
+            ->toArray();
+
+        if (empty($tokens)) {
+            return response()->json(['message' => 'No device tokens found for subscribers'], 200);
+        }
+
+        $projectId = env('FCM_PROJECT_ID');
+        if (!$projectId) {
+            return response()->json(['message' => 'FCM project ID not configured'], 500);
+        }
+
+        $accessToken = $this->getAccessToken();
+
+        $sent = 0; $failed = 0;
+        foreach ($tokens as $token) {
+            $resp = Http::withHeaders([
+                'Authorization' => 'Bearer ' . $accessToken,
+                'Content-Type' => 'application/json',
+            ])->post("https://fcm.googleapis.com/v1/projects/{$projectId}/messages:send", [
+                'message' => [
+                    'token' => $token,
+                    'notification' => [
+                        'title' => $validated['title'],
+                        'body' => $validated['description'],
+                    ],
+                    'data' => [
+                        'type' => 'shop_advertise',
+                        'route' => '/cards',
+                    ],
+                    'android' => [
+                        'notification' => [ 'sound' => 'default' ],
+                    ],
+                ],
+            ]);
+
+            if ($resp->successful()) $sent++; else $failed++;
+        }
+
+        return response()->json([
+            'message' => 'Advertise notification dispatched',
+            'sent' => $sent,
+            'failed' => $failed,
+            'targets' => count($tokens),
+        ]);
     }
 }
 

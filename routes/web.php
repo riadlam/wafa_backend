@@ -1,21 +1,7 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
-use App\Events\MessageSent;
-use Illuminate\Http\Request;
+use App\Http\Controllers\Web\AdvertisementPageController;
 
-// Test Pusher page
-Route::get('/test-pusher', function () {
-    return view('test-pusher');
-});
-
-// Welcome page with chat
-Route::get('/', function () {
-    return view('chat');
-});
-
-// Send message route
-Route::post('/send-message', function (Request $request) {
-    event(new MessageSent($request->input('message')));
-    return ['status' => 'Message Sent!'];
-});
+// Main page: list received advertisements
+Route::get('/', [AdvertisementPageController::class, 'index']);
