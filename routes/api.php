@@ -58,6 +58,7 @@ Route::middleware(['jwt.verify'])->group(function () {
 
     // FCM tokens
     Route::post('/user/fcm-tokens', [FcmTokenController::class, 'store']);
+    Route::post('/user/send-test-notification', [FcmTokenController::class, 'sendTestNotification']);
 
     // Redemption Statistics
     Route::post('/shop-redemptions', [RedemptionStatisticController::class, 'shopRedemptions']);

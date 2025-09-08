@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Facades\Http;
 
 class FcmTokenController extends Controller
 {
@@ -44,6 +45,109 @@ class FcmTokenController extends Controller
             'message' => 'FCM token saved',
             'tokens' => $user->fcm_tokens,
         ]);
+    }
+
+    public function sendTestNotification(Request $request)
+    {
+        $user = $request->user();
+        if (!$user) {
+            return response()->json(['message' => 'Unauthenticated'], 401);
+        }
+
+        $tokens = $user->fcm_tokens ?? [];
+        if (empty($tokens)) {
+            return response()->json(['message' => 'No FCM tokens found for user'], 400);
+        }
+
+        // Get FCM project ID from environment
+        $projectId = env('FCM_PROJECT_ID');
+        if (!$projectId) {
+            return response()->json(['message' => 'FCM project ID not configured'], 500);
+        }
+
+        // Send to first token (for testing)
+        $token = $tokens[0];
+        
+        // Use FCM HTTP v1 API
+        $response = Http::withHeaders([
+            'Authorization' => 'Bearer ' . $this->getAccessToken(),
+            'Content-Type' => 'application/json',
+        ])->post("https://fcm.googleapis.com/v1/projects/{$projectId}/messages:send", [
+            'message' => [
+                'token' => $token,
+                'notification' => [
+                    'title' => 'Test Notification! 🎉',
+                    'body' => 'This is a test push notification from your loyalty app!',
+                ],
+                'data' => [
+                    'type' => 'test',
+                    'route' => '/cards',
+                ],
+                'android' => [
+                    'notification' => [
+                        'sound' => 'default',
+                    ],
+                ],
+            ],
+        ]);
+
+        if ($response->successful()) {
+            return response()->json([
+                'message' => 'Test notification sent successfully',
+                'token' => substr($token, 0, 20) . '...',
+                'fcm_response' => $response->json(),
+            ]);
+        } else {
+            return response()->json([
+                'message' => 'Failed to send notification',
+                'error' => $response->body(),
+            ], 500);
+        }
+    }
+
+    private function getAccessToken()
+    {
+        $serviceAccountPath = storage_path(env('FCM_SERVICE_ACCOUNT_PATH', 'firebase-service-account.json'));
+        
+        if (!file_exists($serviceAccountPath)) {
+            throw new \Exception('Firebase service account file not found');
+        }
+        
+        $serviceAccount = json_decode(file_get_contents($serviceAccountPath), true);
+        
+        // Create JWT token for Google OAuth2
+        $now = time();
+        $payload = [
+            'iss' => $serviceAccount['client_email'],
+            'scope' => 'https://www.googleapis.com/auth/firebase.messaging',
+            'aud' => 'https://oauth2.googleapis.com/token',
+            'iat' => $now,
+            'exp' => $now + 3600,
+        ];
+        
+        $header = json_encode(['typ' => 'JWT', 'alg' => 'RS256']);
+        $payload = json_encode($payload);
+        
+        $base64Header = str_replace(['+', '/', '='], ['-', '_', ''], base64_encode($header));
+        $base64Payload = str_replace(['+', '/', '='], ['-', '_', ''], base64_encode($payload));
+        
+        $signature = '';
+        openssl_sign($base64Header . '.' . $base64Payload, $signature, $serviceAccount['private_key'], 'SHA256');
+        $base64Signature = str_replace(['+', '/', '='], ['-', '_', ''], base64_encode($signature));
+        
+        $jwt = $base64Header . '.' . $base64Payload . '.' . $base64Signature;
+        
+        // Exchange JWT for access token
+        $response = Http::asForm()->post('https://oauth2.googleapis.com/token', [
+            'grant_type' => 'urn:ietf:params:oauth:grant-type:jwt-bearer',
+            'assertion' => $jwt,
+        ]);
+        
+        if ($response->successful()) {
+            return $response->json()['access_token'];
+        }
+        
+        throw new \Exception('Failed to get access token: ' . $response->body());
     }
 }
 
