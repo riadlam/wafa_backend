@@ -48,7 +48,7 @@ class FcmService
         throw new \Exception('Failed to get FCM access token: ' . $response->body());
     }
 
-    public function sendToToken(string $projectId, string $accessToken, string $token, string $title, string $body): bool
+    public function sendToToken(string $projectId, string $accessToken, string $token, string $title, string $body, string $route = '/cards'): bool
     {
         $resp = Http::withHeaders([
             'Authorization' => 'Bearer ' . $accessToken,
@@ -62,7 +62,7 @@ class FcmService
                 ],
                 'data' => [
                     'type' => 'shop_advertise',
-                    'route' => '/cards',
+                    'route' => $route,
                 ],
                 'android' => [ 'notification' => [ 'sound' => 'default' ] ],
             ],
