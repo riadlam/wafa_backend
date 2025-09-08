@@ -21,11 +21,16 @@ class User extends Authenticatable implements JWTSubject
         'plan',
         'trial_ends_at',
         'pro_ends_at',
+        'fcm_tokens',
     ];
     
     protected $dates = [
         'trial_ends_at',
         'pro_ends_at',
+    ];
+
+    protected $casts = [
+        'fcm_tokens' => 'array',
     ];
 
     public function shops()

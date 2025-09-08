@@ -10,6 +10,7 @@ use App\Http\Controllers\Api\StampController;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\QrScanController;
 use App\Http\Controllers\Api\RedemptionStatisticController;
+use App\Http\Controllers\Api\FcmTokenController;
 use App\Events\MessageSent;
 use Illuminate\Http\Request;
 
@@ -54,6 +55,9 @@ Route::middleware(['jwt.verify'])->group(function () {
     Route::post('/refresh-token', [AuthController::class, 'refresh']);
     Route::post('/mark-as-existed', [AuthController::class, 'markAsExisted']);
     Route::post('/setup-shop-owner', [AuthController::class, 'setupShopOwner']);
+
+    // FCM tokens
+    Route::post('/user/fcm-tokens', [FcmTokenController::class, 'store']);
 
     // Redemption Statistics
     Route::post('/shop-redemptions', [RedemptionStatisticController::class, 'shopRedemptions']);
