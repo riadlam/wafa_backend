@@ -32,7 +32,11 @@ class ShopOwnerManagementController extends Controller
             });
         }
 
-        $shopOwners = $query->with(['shops.category', 'shops.loyaltyCards'])
+        $shopOwners = $query->with([
+            'shops.category',
+            'shops.loyaltyCards.userCards.user',
+            'shops.loyaltyCards.stamps'
+        ])
                             ->orderBy('created_at', 'desc')
                             ->paginate(20)
                             ->withQueryString();
@@ -57,8 +61,22 @@ class ShopOwnerManagementController extends Controller
             'shops.loyaltyCards.stamps'
         ]);
 
-        // Get shop statistics
+        // Get shop first
         $shop = $shopOwner->shops->first();
+
+        // Calculate additional statistics
+        $totalRedemptions = 0;
+        $totalAmountDue = 0;
+
+        if ($shop) {
+            // Calculate total redemptions
+            $totalRedemptions = \App\Models\RedemptionStatistic::whereIn('loyalty_card_id',
+                $shop->loyaltyCards->pluck('id')->toArray()
+            )->where('is_payed', 0)->count();
+
+            // Calculate amount due (flat fee of 100 DA per redemption)
+            $totalAmountDue = $totalRedemptions * 100;
+        }
 
         if ($shop) {
             $totalSubscribers = $shop->loyaltyCards->sum(function ($card) {
@@ -76,6 +94,7 @@ class ShopOwnerManagementController extends Controller
                 'shop' => $shop,
                 'totalSubscribers' => $totalSubscribers,
                 'totalRedemptions' => $totalRedemptions,
+                'totalAmountDue' => $totalAmountDue,
                 'activeCards' => $activeCards,
             ]);
         }

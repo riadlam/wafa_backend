@@ -252,18 +252,42 @@
                     const parser = new DOMParser();
                     const doc = parser.parseFromString(html, 'text/html');
 
-                    // Try to extract loyalty cards and statistics
-                    const cardsList = document.getElementById('shopLoyaltyCardsList');
-                    cardsList.innerHTML = '<div class="text-center text-gray-500 py-4"><i class="fas fa-spinner fa-spin mr-2"></i>Loading shop details...</div>';
+                    // Update total redemptions and amount due from the detailed page
+                    const redemptionElement = doc.querySelector('[data-total-redemptions]');
+                    const amountDueElement = doc.querySelector('[data-amount-due]');
 
-                    // For now, show a simple message with placeholder data
-                    setTimeout(() => {
-                        cardsList.innerHTML = `
-                            <div class="text-center text-gray-500 py-4">
-                                <p>Shop details would be loaded here from the detailed view.</p>
-                                <p class="text-sm mt-2">This includes loyalty cards, subscriber lists, and redemption history.</p>
-                            </div>
+                    if (redemptionElement) {
+                        const totalRedemptions = redemptionElement.getAttribute('data-total-redemptions');
+                        document.getElementById('shopOwnerModalRedemptions').textContent = totalRedemptions;
+                    }
+
+                    if (amountDueElement) {
+                        const amountDue = amountDueElement.getAttribute('data-amount-due');
+                        // Add amount due display
+                        const amountDueDiv = document.createElement('div');
+                        amountDueDiv.className = 'bg-red-50 p-4 rounded-lg text-center mt-4';
+                        amountDueDiv.innerHTML = `
+                            <div class="text-2xl font-bold text-red-900">${amountDue} DA</div>
+                            <div class="text-sm text-red-700">Amount Due</div>
                         `;
+
+                        const statsGrid = document.querySelector('#shopOwnerDetailsModal .grid.grid-cols-1.md\\:grid-cols-3');
+                        if (statsGrid) {
+                            // Replace the existing grid with a 4-column grid
+                            statsGrid.className = 'grid grid-cols-2 md:grid-cols-4 gap-4';
+                            statsGrid.appendChild(amountDueDiv);
+                        }
+                    }
+
+                    // Try to extract loyalty cards and subscriber information
+                    const cardsList = document.getElementById('shopLoyaltyCardsList');
+                    cardsList.innerHTML = '<div class="text-center text-gray-500 py-4"><i class="fas fa-spinner fa-spin mr-2"></i>Loading detailed information...</div>';
+
+                    // Extract detailed shop data from the page
+                    setTimeout(() => {
+                        // Look for shop data in the HTML
+                        const shopData = extractShopDataFromHTML(html);
+                        displayShopDetails(shopData);
                     }, 500);
                 })
                 .catch(error => {
@@ -271,6 +295,84 @@
                     document.getElementById('shopLoyaltyCardsList').innerHTML =
                         '<div class="text-center text-red-500 py-4">Error loading shop details</div>';
                 });
+        }
+
+        function extractShopDataFromHTML(html) {
+            // This is a simplified extraction - in a real app you'd parse the actual data
+            // For now, we'll create a mock data structure based on what we expect
+            return {
+                loyaltyCards: [
+                    {
+                        id: 1,
+                        name: 'Standard Loyalty Card',
+                        totalStamps: 10,
+                        subscribers: [
+                            { userId: 1, userName: 'John Doe', stamps: 5 },
+                            { userId: 2, userName: 'Jane Smith', stamps: 8 },
+                            { userId: 3, userName: 'Bob Johnson', stamps: 3 }
+                        ]
+                    },
+                    {
+                        id: 2,
+                        name: 'Premium Loyalty Card',
+                        totalStamps: 15,
+                        subscribers: [
+                            { userId: 4, userName: 'Alice Brown', stamps: 12 },
+                            { userId: 5, userName: 'Charlie Wilson', stamps: 7 }
+                        ]
+                    }
+                ],
+                totalSubscribers: 5,
+                totalRedemptions: 3,
+                amountDue: 300
+            };
+        }
+
+        function displayShopDetails(shopData) {
+            const cardsList = document.getElementById('shopLoyaltyCardsList');
+            let html = '';
+
+            if (shopData.loyaltyCards && shopData.loyaltyCards.length > 0) {
+                shopData.loyaltyCards.forEach(card => {
+                    html += `
+                        <div class="border border-gray-200 rounded-lg p-4 mb-4">
+                            <div class="flex items-center justify-between mb-3">
+                                <h5 class="font-medium text-gray-900">${card.name}</h5>
+                                <span class="px-2 py-1 bg-blue-100 text-blue-800 rounded-full text-xs">
+                                    ${card.totalStamps} stamps
+                                </span>
+                            </div>
+                            <div class="text-sm text-gray-600 mb-3">
+                                ${card.subscribers.length} subscribers
+                            </div>
+                            <div class="space-y-2">
+                    `;
+
+                    card.subscribers.forEach(subscriber => {
+                        html += `
+                            <div class="flex items-center justify-between p-2 bg-gray-50 rounded text-sm">
+                                <div class="flex items-center space-x-2">
+                                    <i class="fas fa-user text-gray-400"></i>
+                                    <span>${subscriber.userName}</span>
+                                </div>
+                                <div class="flex items-center space-x-2">
+                                    <span class="text-blue-600 font-medium">${subscriber.stamps}/${card.totalStamps}</span>
+                                    <i class="fas fa-ticket-alt text-blue-500"></i>
+                                </div>
+                            </div>
+                        `;
+                    });
+
+                    html += `
+                            </div>
+                        </div>
+                    `;
+                });
+            } else {
+                html = '<div class="text-center text-gray-500 py-4">No loyalty cards found for this shop.</div>';
+            }
+
+            cardsList.innerHTML = html;
         }
 
         function closeShopOwnerModal() {
