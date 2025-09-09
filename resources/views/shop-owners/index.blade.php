@@ -60,92 +60,93 @@
                 </div>
             </div>
 
-            <!-- Shop Owners Grid -->
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                @forelse($shopOwners as $shopOwner)
-                <div class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden hover:shadow-md transition-shadow">
-                    <div class="p-6">
-                        <!-- Shop Owner Header -->
-                        <div class="flex items-center space-x-3 mb-4">
-                            @if($shopOwner->shops->first() && $shopOwner->shops->first()->images)
-                                <div class="w-12 h-12 rounded-full overflow-hidden bg-gray-200">
-                                    <img src="/storage/{{ $shopOwner->shops->first()->images[0] ?? '' }}"
-                                         alt="{{ $shopOwner->name }}"
-                                         class="w-full h-full object-cover"
-                                         onerror="this.style.display='none'; this.nextElementSibling.style.display='flex'">
-                                    <div class="w-full h-full bg-green-100 flex items-center justify-center" style="display: none;">
-                                        <i class="fas fa-store text-green-600 text-lg"></i>
+            <!-- Shop Owners Table -->
+            <div class="bg-white rounded-lg shadow-sm overflow-hidden">
+                <div class="overflow-x-auto">
+                    <table class="min-w-full divide-y divide-gray-200">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Shop Owner</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Shop</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Category</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Active Cards</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Subscribers</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Joined</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody class="bg-white divide-y divide-gray-200">
+                            @forelse($shopOwners as $shopOwner)
+                            <tr class="hover:bg-gray-50">
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <div class="flex items-center">
+                                        @if($shopOwner->shops->first() && $shopOwner->shops->first()->images)
+                                            <div class="flex-shrink-0 h-10 w-10">
+                                                <img class="h-10 w-10 rounded-full object-cover"
+                                                     src="/storage/{{ $shopOwner->shops->first()->images[0] ?? '' }}"
+                                                     alt="{{ $shopOwner->name }}"
+                                                     onerror="this.style.display='none'; this.nextElementSibling.style.display='flex'">
+                                                <div class="h-10 w-10 bg-green-100 rounded-full flex items-center justify-center" style="display: none;">
+                                                    <i class="fas fa-store text-green-600"></i>
+                                                </div>
+                                            </div>
+                                        @else
+                                            <div class="flex-shrink-0 h-10 w-10">
+                                                <div class="h-10 w-10 bg-green-100 rounded-full flex items-center justify-center">
+                                                    <i class="fas fa-store text-green-600"></i>
+                                                </div>
+                                            </div>
+                                        @endif
+                                        <div class="ml-4">
+                                            <div class="text-sm font-medium text-gray-900">{{ $shopOwner->name }}</div>
+                                            <div class="text-sm text-gray-500">{{ $shopOwner->email }}</div>
+                                        </div>
                                     </div>
-                                </div>
-                            @else
-                                <div class="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center">
-                                    <i class="fas fa-store text-green-600 text-lg"></i>
-                                </div>
-                            @endif
-                            <div>
-                                <h3 class="font-semibold text-gray-900">{{ $shopOwner->name }}</h3>
-                                <p class="text-sm text-gray-500">{{ $shopOwner->email }}</p>
-                            </div>
-                        </div>
-
-                        <!-- Shop Info -->
-                        @if($shopOwner->shops->first())
-                        <div class="mb-4">
-                            <div class="flex items-center space-x-2 mb-2">
-                                <span class="text-sm font-medium text-gray-700">Shop:</span>
-                                <span class="px-2 py-1 bg-green-100 text-green-800 rounded-full text-xs font-medium">
-                                    {{ $shopOwner->shops->first()->name }}
-                                </span>
-                            </div>
-                            <div class="flex items-center space-x-2 mb-2">
-                                <span class="text-sm font-medium text-gray-700">Category:</span>
-                                <span class="px-2 py-1 bg-blue-100 text-blue-800 rounded-full text-xs font-medium">
-                                    {{ $shopOwner->shops->first()->category->name ?? 'N/A' }}
-                                </span>
-                            </div>
-                        </div>
-                        @endif
-
-                        <!-- Statistics -->
-                        <div class="grid grid-cols-2 gap-4 mb-4">
-                            <div class="text-center p-3 bg-gray-50 rounded-lg">
-                                <div class="text-lg font-bold text-gray-900">{{ $shopOwner->shops->sum(function($shop) { return $shop->loyaltyCards->count(); }) }}</div>
-                                <div class="text-xs text-gray-600">Active Cards</div>
-                            </div>
-                            <div class="text-center p-3 bg-gray-50 rounded-lg">
-                                <div class="text-lg font-bold text-gray-900">{{ $shopOwner->shops->sum(function($shop) { return $shop->loyaltyCards->sum(function($card) { return $card->userCards->count(); }); }) }}</div>
-                                <div class="text-xs text-gray-600">Subscribers</div>
-                            </div>
-                        </div>
-
-                        <!-- Shop Info -->
-                        <div class="space-y-2 mb-4">
-                            <div class="flex items-center justify-between text-sm">
-                                <span class="text-gray-600">Joined:</span>
-                                <span class="text-gray-900">{{ $shopOwner->created_at->format('M d, Y') }}</span>
-                            </div>
-                            @if($shopOwner->shops->first() && $shopOwner->shops->first()->contact_info)
-                            <div class="flex items-center justify-between text-sm">
-                                <span class="text-gray-600">Phone:</span>
-                                <span class="text-gray-900">{{ $shopOwner->shops->first()->contact_info['phone'] ?? 'N/A' }}</span>
-                            </div>
-                            @endif
-                        </div>
-
-                        <!-- Actions -->
-                        <a href="/shop-owners/{{ $shopOwner->id }}"
-                           class="w-full bg-green-500 hover:bg-green-600 text-white text-center py-2 px-4 rounded-lg transition-colors text-sm font-medium">
-                            <i class="fas fa-eye mr-2"></i>View Details
-                        </a>
-                    </div>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    @if($shopOwner->shops->first())
+                                        <div class="text-sm text-gray-900">{{ $shopOwner->shops->first()->name }}</div>
+                                    @else
+                                        <span class="text-gray-400">No shop</span>
+                                    @endif
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    @if($shopOwner->shops->first() && $shopOwner->shops->first()->category)
+                                        <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">
+                                            {{ $shopOwner->shops->first()->category->name }}
+                                        </span>
+                                    @else
+                                        <span class="text-gray-400">N/A</span>
+                                    @endif
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                    {{ $shopOwner->shops->sum(function($shop) { return $shop->loyaltyCards->count(); }) }}
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                    {{ $shopOwner->shops->sum(function($shop) { return $shop->loyaltyCards->sum(function($card) { return $card->userCards->count(); }); }) }}
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                    {{ $shopOwner->created_at->format('M d, Y') }}
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                    <button onclick="showShopOwnerDetails({{ $shopOwner->id }}, '{{ addslashes($shopOwner->name) }}', '{{ addslashes($shopOwner->email) }}', '{{ addslashes($shopOwner->shops->first()->name ?? 'No Shop') }}', '{{ addslashes($shopOwner->shops->first()->category->name ?? 'N/A') }}', {{ $shopOwner->shops->sum(function($shop) { return $shop->loyaltyCards->count(); }) }}, {{ $shopOwner->shops->sum(function($shop) { return $shop->loyaltyCards->sum(function($card) { return $card->userCards->count(); }); }) }}, '{{ $shopOwner->created_at->format('M d, Y') }}')"
+                                            class="bg-green-500 hover:bg-green-600 text-white px-3 py-1 rounded text-xs transition-colors">
+                                        <i class="fas fa-eye mr-1"></i>Show
+                                    </button>
+                                </td>
+                            </tr>
+                            @empty
+                            <tr>
+                                <td colspan="7" class="px-6 py-12 text-center">
+                                    <i class="fas fa-store text-gray-300 text-4xl mb-4"></i>
+                                    <h3 class="text-lg font-medium text-gray-900 mb-2">No shop owners found</h3>
+                                    <p class="text-gray-500">Try adjusting your search or filters</p>
+                                </td>
+                            </tr>
+                            @endforelse
+                        </tbody>
+                    </table>
                 </div>
-                @empty
-                <div class="col-span-full text-center py-12">
-                    <i class="fas fa-store text-gray-300 text-4xl mb-4"></i>
-                    <h3 class="text-lg font-medium text-gray-900 mb-2">No shop owners found</h3>
-                    <p class="text-gray-500">Try adjusting your search or filters</p>
-                </div>
-                @endforelse
             </div>
 
             <!-- Pagination -->
@@ -156,5 +157,139 @@
             @endif
         </div>
     </div>
+
+    <!-- Shop Owner Details Modal -->
+    <div id="shopOwnerDetailsModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full hidden z-50">
+        <div class="relative top-20 mx-auto p-5 border w-11/12 max-w-2xl shadow-lg rounded-md bg-white">
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="text-lg font-medium text-gray-900" id="shopOwnerModalTitle">Shop Owner Details</h3>
+                <button onclick="closeShopOwnerModal()" class="text-gray-400 hover:text-gray-600">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
+            </div>
+
+            <div class="space-y-4">
+                <!-- Shop Owner Info -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="bg-gray-50 p-4 rounded-lg">
+                        <h4 class="font-medium text-gray-900 mb-2">Basic Information</h4>
+                        <div class="space-y-2 text-sm">
+                            <div><span class="font-medium">Name:</span> <span id="shopOwnerModalName"></span></div>
+                            <div><span class="font-medium">Email:</span> <span id="shopOwnerModalEmail"></span></div>
+                            <div><span class="font-medium">Joined:</span> <span id="shopOwnerModalJoined"></span></div>
+                        </div>
+                    </div>
+
+                    <div class="bg-green-50 p-4 rounded-lg">
+                        <h4 class="font-medium text-green-900 mb-2">Shop Information</h4>
+                        <div class="space-y-2 text-sm">
+                            <div><span class="font-medium">Shop Name:</span> <span id="shopOwnerModalShopName"></span></div>
+                            <div><span class="font-medium">Category:</span> <span id="shopOwnerModalCategory" class="px-2 py-1 rounded-full text-xs"></span></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Statistics -->
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div class="bg-blue-50 p-4 rounded-lg text-center">
+                        <div class="text-2xl font-bold text-blue-900" id="shopOwnerModalActiveCards"></div>
+                        <div class="text-sm text-blue-700">Active Cards</div>
+                    </div>
+                    <div class="bg-green-50 p-4 rounded-lg text-center">
+                        <div class="text-2xl font-bold text-green-900" id="shopOwnerModalSubscribers"></div>
+                        <div class="text-sm text-green-700">Subscribers</div>
+                    </div>
+                    <div class="bg-purple-50 p-4 rounded-lg text-center">
+                        <div class="text-2xl font-bold text-purple-900" id="shopOwnerModalRedemptions">0</div>
+                        <div class="text-sm text-purple-700">Total Redemptions</div>
+                    </div>
+                </div>
+
+                <!-- Loyalty Cards List -->
+                <div id="shopLoyaltyCardsSection" class="bg-gray-50 p-4 rounded-lg">
+                    <h4 class="font-medium text-gray-900 mb-3">Loyalty Cards & Subscribers</h4>
+                    <div id="shopLoyaltyCardsList" class="space-y-2">
+                        <!-- Cards will be loaded here via AJAX -->
+                    </div>
+                </div>
+            </div>
+
+            <div class="flex justify-end mt-6">
+                <button onclick="closeShopOwnerModal()" class="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-lg transition-colors">
+                    Close
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function showShopOwnerDetails(shopOwnerId, name, email, shopName, category, activeCards, subscribers, joined) {
+            // Set basic info
+            document.getElementById('shopOwnerModalName').textContent = name;
+            document.getElementById('shopOwnerModalEmail').textContent = email;
+            document.getElementById('shopOwnerModalShopName').textContent = shopName;
+            document.getElementById('shopOwnerModalJoined').textContent = joined;
+            document.getElementById('shopOwnerModalActiveCards').textContent = activeCards;
+            document.getElementById('shopOwnerModalSubscribers').textContent = subscribers;
+
+            // Set category with styling
+            const categoryElement = document.getElementById('shopOwnerModalCategory');
+            categoryElement.textContent = category;
+            categoryElement.className = `px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800`;
+
+            // Show modal
+            document.getElementById('shopOwnerDetailsModal').classList.remove('hidden');
+
+            // Load detailed shop information via AJAX
+            loadShopOwnerDetails(shopOwnerId);
+        }
+
+        function loadShopOwnerDetails(shopOwnerId) {
+            fetch(`/shop-owners/${shopOwnerId}`)
+                .then(response => response.text())
+                .then(html => {
+                    // Extract shop information from the detailed page
+                    const parser = new DOMParser();
+                    const doc = parser.parseFromString(html, 'text/html');
+
+                    // Try to extract loyalty cards and statistics
+                    const cardsList = document.getElementById('shopLoyaltyCardsList');
+                    cardsList.innerHTML = '<div class="text-center text-gray-500 py-4"><i class="fas fa-spinner fa-spin mr-2"></i>Loading shop details...</div>';
+
+                    // For now, show a simple message with placeholder data
+                    setTimeout(() => {
+                        cardsList.innerHTML = `
+                            <div class="text-center text-gray-500 py-4">
+                                <p>Shop details would be loaded here from the detailed view.</p>
+                                <p class="text-sm mt-2">This includes loyalty cards, subscriber lists, and redemption history.</p>
+                            </div>
+                        `;
+                    }, 500);
+                })
+                .catch(error => {
+                    console.error('Error loading shop owner details:', error);
+                    document.getElementById('shopLoyaltyCardsList').innerHTML =
+                        '<div class="text-center text-red-500 py-4">Error loading shop details</div>';
+                });
+        }
+
+        function closeShopOwnerModal() {
+            document.getElementById('shopOwnerDetailsModal').classList.add('hidden');
+        }
+
+        // Close modal when clicking outside
+        document.getElementById('shopOwnerDetailsModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeShopOwnerModal();
+            }
+        });
+
+        // Close modal with Escape key
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                closeShopOwnerModal();
+            }
+        });
+    </script>
 </body>
 </html>
