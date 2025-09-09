@@ -200,7 +200,8 @@ class RedemptionStatisticController extends Controller
 
     /**
      * Calculate the total amount due for unredeemed loyalty cards
-     * 
+     * Using flat fee of 100 DA per redemption
+     *
      * @return \Illuminate\Http\JsonResponse
      */
     public function calculateAmountDue()
@@ -208,95 +209,71 @@ class RedemptionStatisticController extends Controller
         try {
             // Get the authenticated user
             $user = auth()->user();
-            
+
             // Get the user's shop
             $shop = $user->shops()->first();
-            
+
             if (!$shop) {
                 return response()->json([
                     'status' => 'error',
                     'message' => 'No shop found for this user'
                 ], 404);
             }
-            
-            // Get the shop's category to get the one_unit_price
-            $category = Category::find($shop->category_id);
-            
-            if (!$category) {
-                return response()->json([
-                    'status' => 'error',
-                    'message' => 'Category not found for this shop'
-                ], 404);
-            }
-            
-            $oneUnitPrice = $category->one_unit_price ?? 0;
-            
-            if ($oneUnitPrice <= 0) {
-                return response()->json([
-                    'status' => 'error',
-                    'message' => 'Price per unit is not set for this category'
-                ], 400);
-            }
-            
+
             // Get all loyalty cards for the shop
             $loyaltyCards = $shop->loyaltyCards()->get();
-            
+
             if ($loyaltyCards->isEmpty()) {
                 return response()->json([
                     'status' => 'success',
                     'data' => [
                         'total_amount_due' => 0,
                         'unredeemed_count' => 0,
-                        'one_unit_price' => $oneUnitPrice,
+                        'flat_fee_per_redemption' => 100,
                         'details' => []
                     ]
                 ]);
             }
-            
+
             $totalAmountDue = 0;
             $details = [];
             $totalUnredeemed = 0;
-            
+            $flatFeePerRedemption = 100; // Flat fee of 100 DA per redemption
+
             foreach ($loyaltyCards as $card) {
                 // Count unredeemed redemptions for this card (is_payed = 0)
                 $unredeemedCount = RedemptionStatistic::where('loyalty_card_id', $card->id)
                     ->where('is_payed', 0)
                     ->count();
-                
+
                 if ($unredeemedCount > 0) {
-                    // Calculate base amount: one_unit_price * total_stamps
-                    $baseAmount = $oneUnitPrice * $card->total_stamps;
-                    // Calculate percentage amount: total_stamps% of base amount
-                    $percentageAmount = $baseAmount * ($card->total_stamps / 100);
-                    // Calculate total for all unredeemed users
-                    $cardAmount = $percentageAmount * $unredeemedCount;
-                    
+                    // Calculate flat amount: flat_fee_per_redemption * unredeemed_count
+                    $cardAmount = $flatFeePerRedemption * $unredeemedCount;
+
                     $totalAmountDue += $cardAmount;
                     $totalUnredeemed += $unredeemedCount;
-                    
+
                     $details[] = [
                         'loyalty_card_id' => $card->id,
                         'card_name' => 'Loyalty Card #' . $card->id,
                         'total_stamps' => $card->total_stamps,
-                        'percentage' => $card->total_stamps . '%',
-                        'base_amount' => $baseAmount,
-                        'amount_per_redemption' => $percentageAmount,
+                        'flat_fee_per_redemption' => $flatFeePerRedemption,
                         'unredeemed_count' => $unredeemedCount,
                         'amount_for_card' => $cardAmount
                     ];
                 }
             }
-            
+
             return response()->json([
                 'status' => 'success',
                 'data' => [
                     'total_amount_due' => $totalAmountDue,
                     'unredeemed_count' => $totalUnredeemed,
-                    'one_unit_price' => $oneUnitPrice,
+                    'flat_fee_per_redemption' => $flatFeePerRedemption,
                     'details' => $details
                 ]
             ]);
-            
+
         } catch (\Exception $e) {
             return response()->json([
                 'status' => 'error',
