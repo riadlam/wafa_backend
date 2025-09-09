@@ -88,7 +88,7 @@ function getImageUrl($imagePath) {
                         </thead>
                         <tbody class="bg-white divide-y divide-gray-200">
                             @forelse($shopOwners as $shopOwner)
-                            <tr class="hover:bg-gray-50">
+                            <tr class="hover:bg-gray-50 cursor-pointer" onclick="window.location.href='/shop-owners/{{ $shopOwner->id }}'">
                                 <td class="px-6 py-4 whitespace-nowrap">
                                     <div class="flex items-center">
                                         @if($shopOwner->shops->first() && $shopOwner->shops->first()->images)
@@ -140,7 +140,7 @@ function getImageUrl($imagePath) {
                                     {{ $shopOwner->created_at->format('M d, Y') }}
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                                    <button onclick="showShopOwnerDetails({{ $shopOwner->id }}, '{{ addslashes($shopOwner->name) }}', '{{ addslashes($shopOwner->email) }}', '{{ addslashes($shopOwner->shops->first()->name ?? 'No Shop') }}', '{{ addslashes($shopOwner->shops->first()->category->name ?? 'N/A') }}', {{ $shopOwner->shops->sum(function($shop) { return $shop->loyaltyCards->count(); }) }}, {{ $shopOwner->shops->sum(function($shop) { return $shop->loyaltyCards->sum(function($card) { return $card->userCards->count(); }); }) }}, '{{ $shopOwner->created_at->format('M d, Y') }}')"
+                                    <button onclick="event.stopPropagation(); window.location.href='/shop-owners/{{ $shopOwner->id }}'"
                                             class="bg-green-500 hover:bg-green-600 text-white px-3 py-1 rounded text-xs transition-colors">
                                         <i class="fas fa-eye mr-1"></i>Show
                                     </button>
