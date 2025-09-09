@@ -91,16 +91,16 @@
                             </div>
                             <div class="flex items-center justify-between text-sm">
                                 <span class="text-gray-600">Total Stamps:</span>
-                                <span class="text-gray-900">{{ $user->stamps->count() }}</span>
+                                <span class="text-gray-900">{{ $user->addedStamps->count() }}</span>
                             </div>
                         </div>
 
                         <!-- Loyalty Cards -->
                         <div class="mb-4">
-                            <h4 class="text-sm font-medium text-gray-700 mb-2">Loyalty Cards ({{ $user->userLoyaltyCards->count() }})</h4>
-                            @if($user->userLoyaltyCards->count() > 0)
+                            <h4 class="text-sm font-medium text-gray-700 mb-2">Loyalty Cards ({{ $user->loyaltyCards->count() }})</h4>
+                            @if($user->loyaltyCards->count() > 0)
                                 <div class="space-y-2">
-                                    @foreach($user->userLoyaltyCards->take(2) as $userCard)
+                                    @foreach($user->loyaltyCards->take(2) as $userCard)
                                     <div class="flex items-center justify-between p-2 bg-gray-50 rounded text-xs">
                                         <div>
                                             <span class="font-medium">{{ $userCard->loyaltyCard->shop->name ?? 'Unknown Shop' }}</span>
@@ -111,8 +111,8 @@
                                         </div>
                                     </div>
                                     @endforeach
-                                    @if($user->userLoyaltyCards->count() > 2)
-                                    <p class="text-xs text-gray-500 text-center">+{{ $user->userLoyaltyCards->count() - 2 }} more cards</p>
+                                    @if($user->loyaltyCards->count() > 2)
+                                    <p class="text-xs text-gray-500 text-center">+{{ $user->loyaltyCards->count() - 2 }} more cards</p>
                                     @endif
                                 </div>
                             @else

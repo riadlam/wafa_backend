@@ -32,7 +32,7 @@ class UserManagementController extends Controller
             });
         }
 
-        $users = $query->with(['userLoyaltyCards.loyaltyCard.shop', 'stamps'])
+        $users = $query->with(['loyaltyCards.loyaltyCard.shop', 'addedStamps'])
                        ->orderBy('created_at', 'desc')
                        ->paginate(20)
                        ->withQueryString();
@@ -48,14 +48,14 @@ class UserManagementController extends Controller
     {
         // Load user's loyalty cards with stamps and shop info
         $user->load([
-            'userLoyaltyCards.loyaltyCard.shop',
-            'userLoyaltyCards.stamps',
+            'loyaltyCards.loyaltyCard.shop',
+            'loyaltyCards.stamps',
             'shops.loyaltyCards'
         ]);
 
         // Get user's stamp statistics
-        $totalStamps = $user->stamps()->count();
-        $completedCards = $user->userLoyaltyCards()->where('active_stamps', '>=', function ($query) {
+        $totalStamps = $user->addedStamps()->count();
+        $completedCards = $user->loyaltyCards()->where('active_stamps', '>=', function ($query) {
             $query->selectRaw('loyalty_cards.total_stamps')
                   ->from('loyalty_cards')
                   ->whereColumn('loyalty_cards.id', 'user_loyalty_cards.loyalty_card_id');
