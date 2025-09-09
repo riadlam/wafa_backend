@@ -29,6 +29,17 @@
   </head>
   <body>
     <div class="container">
+      <!-- Navigation Header -->
+      <div style="background:#fff; border-radius:12px; box-shadow:0 4px 16px rgba(0,0,0,0.06); padding:16px; margin-bottom:16px;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
+          <h1 style="margin:0; font-size:20px; font-weight:700; color:#111827;">Wafa Loyalty Dashboard</h1>
+          <div style="display:flex; gap:8px;">
+            <a href="/users" style="text-decoration:none; padding:8px 16px; border-radius:8px; background:#3b82f6; color:#fff; font-size:14px; font-weight:500;">👥 Users</a>
+            <a href="/shop-owners" style="text-decoration:none; padding:8px 16px; border-radius:8px; background:#10b981; color:#fff; font-size:14px; font-weight:500;">🏪 Shop Owners</a>
+          </div>
+        </div>
+      </div>
+
       <div class="card" style="margin-bottom:16px;">
         <h2 style="margin:0 0 8px; font-size:16px;">Send notification to shop owners</h2>
         <form method="POST" action="/notify/owners" style="display:flex; gap:8px; flex-wrap:wrap; align-items:flex-end;">

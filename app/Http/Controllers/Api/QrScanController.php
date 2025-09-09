@@ -287,6 +287,7 @@ class QrScanController extends Controller
                 RedemptionStatistic::create([
                     'user_id' => $user->id,
                     'loyalty_card_id' => $loyaltyCard->id,
+                    'is_payed' => 0, // Explicitly set as unpaid
                 ]);
             }
 

@@ -220,10 +220,10 @@ class RedemptionStatisticController extends Controller
                 ], 404);
             }
 
-            // Get all loyalty cards for the shop
-            $loyaltyCards = $shop->loyaltyCards()->get();
+            // Get all loyalty card IDs for the shop
+            $loyaltyCardIds = $shop->loyaltyCards()->pluck('id')->toArray();
 
-            if ($loyaltyCards->isEmpty()) {
+            if (empty($loyaltyCardIds)) {
                 return response()->json([
                     'status' => 'success',
                     'data' => [
@@ -235,32 +235,38 @@ class RedemptionStatisticController extends Controller
                 ]);
             }
 
-            $totalAmountDue = 0;
+            // Count total unredeemed redemptions for all shop's loyalty cards
+            $totalUnredeemed = RedemptionStatistic::whereIn('loyalty_card_id', $loyaltyCardIds)
+                ->where('is_payed', 0)
+                ->count();
+
+            // Calculate total amount due (flat fee of 100 DA per redemption)
+            $flatFeePerRedemption = 100;
+            $totalAmountDue = $totalUnredeemed * $flatFeePerRedemption;
+
+            // Debug logging
+            \Log::info("Shop ID {$shop->id}: Total unredeemed = {$totalUnredeemed}, Total amount due = {$totalAmountDue}");
+
+            // Get breakdown by loyalty card for details
             $details = [];
-            $totalUnredeemed = 0;
-            $flatFeePerRedemption = 100; // Flat fee of 100 DA per redemption
+            foreach ($loyaltyCardIds as $cardId) {
+                $card = \App\Models\LoyaltyCard::find($cardId);
+                if ($card) {
+                    $unredeemedCount = RedemptionStatistic::where('loyalty_card_id', $cardId)
+                        ->where('is_payed', 0)
+                        ->count();
 
-            foreach ($loyaltyCards as $card) {
-                // Count unredeemed redemptions for this card (is_payed = 0)
-                $unredeemedCount = RedemptionStatistic::where('loyalty_card_id', $card->id)
-                    ->where('is_payed', 0)
-                    ->count();
-
-                if ($unredeemedCount > 0) {
-                    // Calculate flat amount: flat_fee_per_redemption * unredeemed_count
-                    $cardAmount = $flatFeePerRedemption * $unredeemedCount;
-
-                    $totalAmountDue += $cardAmount;
-                    $totalUnredeemed += $unredeemedCount;
-
-                    $details[] = [
-                        'loyalty_card_id' => $card->id,
-                        'card_name' => 'Loyalty Card #' . $card->id,
-                        'total_stamps' => $card->total_stamps,
-                        'flat_fee_per_redemption' => $flatFeePerRedemption,
-                        'unredeemed_count' => $unredeemedCount,
-                        'amount_for_card' => $cardAmount
-                    ];
+                    if ($unredeemedCount > 0) {
+                        $cardAmount = $unredeemedCount * $flatFeePerRedemption;
+                        $details[] = [
+                            'loyalty_card_id' => $cardId,
+                            'card_name' => 'Loyalty Card #' . $cardId,
+                            'total_stamps' => $card->total_stamps,
+                            'flat_fee_per_redemption' => $flatFeePerRedemption,
+                            'unredeemed_count' => $unredeemedCount,
+                            'amount_for_card' => $cardAmount
+                        ];
+                    }
                 }
             }
 
