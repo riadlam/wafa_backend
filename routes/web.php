@@ -40,19 +40,25 @@ Route::get('/debug-images', function () {
 
 // Debug route to check location data
 Route::get('/debug-locations', function () {
-    $shops = \App\Models\Shop::whereNotNull('location')->with('owner')->get();
+    $shops = \App\Models\Shop::with(['owner', 'shopLocations'])->get();
 
     $debug = [];
     foreach ($shops as $shop) {
+        $shopLocation = $shop->shopLocations->first();
+
         $debug[] = [
             'shop_name' => $shop->name,
             'owner_name' => $shop->owner->name ?? 'N/A',
-            'location_raw' => $shop->location,
-            'location_type' => gettype($shop->location),
-            'has_address' => isset($shop->location['address']),
-            'has_wilaya' => isset($shop->location['wilaya']),
-            'has_coordinates' => isset($shop->location['coordinates']),
-            'coordinates_type' => isset($shop->location['coordinates']) ? gettype($shop->location['coordinates']) : null,
+            'shop_location_field' => $shop->location, // JSON field in shops table
+            'shop_locations_table' => $shopLocation ? [
+                'name' => $shopLocation->name,
+                'lat' => $shopLocation->lat,
+                'lng' => $shopLocation->lng,
+                'user_id' => $shopLocation->user_id,
+                'shop_id' => $shopLocation->shop_id,
+            ] : null,
+            'has_shop_location' => $shopLocation ? true : false,
+            'shop_locations_count' => $shop->shopLocations->count(),
         ];
     }
 

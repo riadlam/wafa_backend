@@ -109,12 +109,32 @@ function getImageUrl($imagePath) {
                             <i class="fas fa-map-marker-alt mr-2"></i>Location
                         </h3>
                         <div class="space-y-2 text-sm">
-                            @if($shop->location)
-                                @if(isset($shop->location['address']) && !empty($shop->location['address']))
+                            @php
+                                $shopLocation = $shop->shopLocations->first(); // Get primary location
+                            @endphp
+
+                            @if($shopLocation)
+                                @if($shopLocation->name)
+                                <div><span class="font-medium">Address:</span> {{ $shopLocation->name }}</div>
+                                @endif
+
+                                <div><span class="font-medium">Coordinates:</span>
+                                    <span class="text-xs text-gray-600">
+                                        {{ $shopLocation->lat }}, {{ $shopLocation->lng }}
+                                    </span>
+                                </div>
+
+                                {{-- Show wilaya if available in shop's location field --}}
+                                @if($shop->location && isset($shop->location['wilaya']))
+                                <div><span class="font-medium">Wilaya:</span> {{ $shop->location['wilaya'] }}</div>
+                                @endif
+                            @elseif($shop->location)
+                                {{-- Fallback to shop's location field if shop_locations is empty --}}
+                                @if(isset($shop->location['address']))
                                 <div><span class="font-medium">Address:</span> {{ $shop->location['address'] }}</div>
                                 @endif
 
-                                @if(isset($shop->location['wilaya']) && !empty($shop->location['wilaya']))
+                                @if(isset($shop->location['wilaya']))
                                 <div><span class="font-medium">Wilaya:</span> {{ $shop->location['wilaya'] }}</div>
                                 @endif
 
@@ -123,16 +143,6 @@ function getImageUrl($imagePath) {
                                     <span class="text-xs text-gray-600">
                                         {{ $shop->location['coordinates']['latitude'] ?? 'N/A' }},
                                         {{ $shop->location['coordinates']['longitude'] ?? 'N/A' }}
-                                    </span>
-                                </div>
-                                @endif
-
-                                {{-- Alternative coordinate format --}}
-                                @if(!isset($shop->location['coordinates']) && isset($shop->location['latitude']))
-                                <div><span class="font-medium">Coordinates:</span>
-                                    <span class="text-xs text-gray-600">
-                                        {{ $shop->location['latitude'] ?? 'N/A' }},
-                                        {{ $shop->location['longitude'] ?? 'N/A' }}
                                     </span>
                                 </div>
                                 @endif

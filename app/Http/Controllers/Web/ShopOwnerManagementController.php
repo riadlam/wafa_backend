@@ -58,7 +58,8 @@ class ShopOwnerManagementController extends Controller
         $shopOwner->load([
             'shops.category',
             'shops.loyaltyCards.userCards.user',
-            'shops.loyaltyCards.userCards.stamps'
+            'shops.loyaltyCards.userCards.stamps',
+            'shops.shopLocations' // Load shop locations
         ]);
 
         // Get shop first
