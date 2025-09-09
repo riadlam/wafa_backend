@@ -110,17 +110,29 @@ function getImageUrl($imagePath) {
                         </h3>
                         <div class="space-y-2 text-sm">
                             @if($shop->location)
-                                @if(isset($shop->location['address']))
+                                @if(isset($shop->location['address']) && !empty($shop->location['address']))
                                 <div><span class="font-medium">Address:</span> {{ $shop->location['address'] }}</div>
                                 @endif
-                                @if(isset($shop->location['wilaya']))
+
+                                @if(isset($shop->location['wilaya']) && !empty($shop->location['wilaya']))
                                 <div><span class="font-medium">Wilaya:</span> {{ $shop->location['wilaya'] }}</div>
                                 @endif
+
                                 @if(isset($shop->location['coordinates']))
                                 <div><span class="font-medium">Coordinates:</span>
                                     <span class="text-xs text-gray-600">
                                         {{ $shop->location['coordinates']['latitude'] ?? 'N/A' }},
                                         {{ $shop->location['coordinates']['longitude'] ?? 'N/A' }}
+                                    </span>
+                                </div>
+                                @endif
+
+                                {{-- Alternative coordinate format --}}
+                                @if(!isset($shop->location['coordinates']) && isset($shop->location['latitude']))
+                                <div><span class="font-medium">Coordinates:</span>
+                                    <span class="text-xs text-gray-600">
+                                        {{ $shop->location['latitude'] ?? 'N/A' }},
+                                        {{ $shop->location['longitude'] ?? 'N/A' }}
                                     </span>
                                 </div>
                                 @endif

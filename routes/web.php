@@ -37,3 +37,24 @@ Route::get('/debug-images', function () {
 
     return response()->json($debug);
 });
+
+// Debug route to check location data
+Route::get('/debug-locations', function () {
+    $shops = \App\Models\Shop::whereNotNull('location')->with('owner')->get();
+
+    $debug = [];
+    foreach ($shops as $shop) {
+        $debug[] = [
+            'shop_name' => $shop->name,
+            'owner_name' => $shop->owner->name ?? 'N/A',
+            'location_raw' => $shop->location,
+            'location_type' => gettype($shop->location),
+            'has_address' => isset($shop->location['address']),
+            'has_wilaya' => isset($shop->location['wilaya']),
+            'has_coordinates' => isset($shop->location['coordinates']),
+            'coordinates_type' => isset($shop->location['coordinates']) ? gettype($shop->location['coordinates']) : null,
+        ];
+    }
+
+    return response()->json($debug);
+});

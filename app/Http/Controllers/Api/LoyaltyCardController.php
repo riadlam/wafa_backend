@@ -237,10 +237,18 @@ class LoyaltyCardController extends Controller
             // Get existing shop if it exists
             $shop = Shop::where('user_id', $user->id)->first();
             
-            // Prepare shop data
+            // Prepare shop data with location
             $shopData = [
                 'name' => $validated['shop_name'],
-                'category_id' => $validated['category_id']
+                'category_id' => $validated['category_id'],
+                'location' => [
+                    'address' => $validated['location_name'],
+                    'coordinates' => [
+                        'latitude' => $validated['lat'],
+                        'longitude' => $validated['lng']
+                    ],
+                    'wilaya' => $request->input('wilaya', null) // Optional wilaya field
+                ]
             ];
             
             // If shop exists, merge existing images with new ones
