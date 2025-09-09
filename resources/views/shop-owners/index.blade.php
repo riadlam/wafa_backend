@@ -298,33 +298,44 @@
         }
 
         function extractShopDataFromHTML(html) {
-            // This is a simplified extraction - in a real app you'd parse the actual data
-            // For now, we'll create a mock data structure based on what we expect
+            // Parse the actual data from the HTML response
+            const parser = new DOMParser();
+            const doc = parser.parseFromString(html, 'text/html');
+
+            // Extract loyalty cards data from the page
+            const loyaltyCards = [];
+            const cardElements = doc.querySelectorAll('[data-loyalty-card]');
+
+            cardElements.forEach(cardElement => {
+                const cardId = cardElement.getAttribute('data-loyalty-card-id');
+                const cardName = cardElement.getAttribute('data-loyalty-card-name') || 'Loyalty Card #' + cardId;
+                const totalStamps = parseInt(cardElement.getAttribute('data-total-stamps') || '10');
+
+                // Extract subscribers for this card
+                const subscribers = [];
+                const subscriberElements = cardElement.querySelectorAll('[data-subscriber]');
+
+                subscriberElements.forEach(subElement => {
+                    subscribers.push({
+                        userId: subElement.getAttribute('data-user-id'),
+                        userName: subElement.getAttribute('data-user-name'),
+                        stamps: parseInt(subElement.getAttribute('data-stamps') || '0')
+                    });
+                });
+
+                loyaltyCards.push({
+                    id: cardId,
+                    name: cardName,
+                    totalStamps: totalStamps,
+                    subscribers: subscribers
+                });
+            });
+
             return {
-                loyaltyCards: [
-                    {
-                        id: 1,
-                        name: 'Standard Loyalty Card',
-                        totalStamps: 10,
-                        subscribers: [
-                            { userId: 1, userName: 'John Doe', stamps: 5 },
-                            { userId: 2, userName: 'Jane Smith', stamps: 8 },
-                            { userId: 3, userName: 'Bob Johnson', stamps: 3 }
-                        ]
-                    },
-                    {
-                        id: 2,
-                        name: 'Premium Loyalty Card',
-                        totalStamps: 15,
-                        subscribers: [
-                            { userId: 4, userName: 'Alice Brown', stamps: 12 },
-                            { userId: 5, userName: 'Charlie Wilson', stamps: 7 }
-                        ]
-                    }
-                ],
-                totalSubscribers: 5,
-                totalRedemptions: 3,
-                amountDue: 300
+                loyaltyCards: loyaltyCards,
+                totalSubscribers: loyaltyCards.reduce((total, card) => total + card.subscribers.length, 0),
+                totalRedemptions: parseInt(doc.querySelector('[data-total-redemptions]')?.getAttribute('data-total-redemptions') || '0'),
+                amountDue: parseInt(doc.querySelector('[data-amount-due]')?.getAttribute('data-amount-due') || '0')
             };
         }
 

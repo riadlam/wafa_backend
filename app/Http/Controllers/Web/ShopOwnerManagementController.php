@@ -35,7 +35,7 @@ class ShopOwnerManagementController extends Controller
         $shopOwners = $query->with([
             'shops.category',
             'shops.loyaltyCards.userCards.user',
-            'shops.loyaltyCards.stamps'
+            'shops.loyaltyCards.userCards.stamps'
         ])
                             ->orderBy('created_at', 'desc')
                             ->paginate(20)
@@ -58,7 +58,7 @@ class ShopOwnerManagementController extends Controller
         $shopOwner->load([
             'shops.category',
             'shops.loyaltyCards.userCards.user',
-            'shops.loyaltyCards.stamps'
+            'shops.loyaltyCards.userCards.stamps'
         ]);
 
         // Get shop first
@@ -83,9 +83,11 @@ class ShopOwnerManagementController extends Controller
                 return $card->userCards->count();
             });
 
-            $totalRedemptions = $shop->loyaltyCards->sum(function ($card) {
-                return $card->stamps->count();
-            });
+            // Calculate total redemptions from RedemptionStatistic model
+            $loyaltyCardIds = $shop->loyaltyCards->pluck('id')->toArray();
+            $totalRedemptions = \App\Models\RedemptionStatistic::whereIn('loyalty_card_id', $loyaltyCardIds)
+                ->where('is_payed', 0)
+                ->count();
 
             $activeCards = $shop->loyaltyCards->count();
 

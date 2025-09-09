@@ -85,7 +85,11 @@
 
                 <div class="space-y-6">
                     @foreach($shop->loyaltyCards as $card)
-                    <div class="border border-gray-200 rounded-lg p-6">
+                    <div class="border border-gray-200 rounded-lg p-6"
+                         data-loyalty-card
+                         data-loyalty-card-id="{{ $card->id }}"
+                         data-loyalty-card-name="{{ $card->description ?? 'Loyalty Card #' . $card->id }}"
+                         data-total-stamps="{{ $card->total_stamps }}">
                         <div class="flex items-center justify-between mb-4">
                             <h4 class="font-medium text-gray-900">{{ $card->description ?? 'Loyalty Card #' . $card->id }}</h4>
                             <div class="flex items-center space-x-4">
@@ -111,7 +115,10 @@
                                 </thead>
                                 <tbody class="bg-white divide-y divide-gray-200">
                                     @foreach($card->userCards as $userCard)
-                                    <tr>
+                                    <tr data-subscriber
+                                        data-user-id="{{ $userCard->user->id }}"
+                                        data-user-name="{{ $userCard->user->name }}"
+                                        data-stamps="{{ $userCard->active_stamps }}">
                                         <td class="px-4 py-3 whitespace-nowrap">
                                             <div class="flex items-center">
                                                 <div class="flex-shrink-0 h-8 w-8">
