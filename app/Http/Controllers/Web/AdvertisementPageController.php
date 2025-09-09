@@ -89,9 +89,38 @@ class AdvertisementPageController extends Controller
         $pendingRedemptions = RedemptionStatistic::where('is_payed', 0)->get();
         $totalAmountDue = $pendingRedemptions->count() * 100; // 100 DA per redemption
 
-        $affectedShops = $pendingRedemptions->pluck('loyalty_card_id')->unique()->map(function ($cardId) {
+        // Get affected shops with detailed information
+        $affectedShopIds = $pendingRedemptions->pluck('loyalty_card_id')->unique()->map(function ($cardId) {
             return \App\Models\LoyaltyCard::find($cardId)?->shop_id;
-        })->filter()->unique()->count();
+        })->filter()->unique();
+
+        $shopsDetailed = [];
+        foreach ($affectedShopIds as $shopId) {
+            $shop = \App\Models\Shop::find($shopId);
+            if ($shop) {
+                $shopPendingRedemptions = $pendingRedemptions->filter(function ($redemption) use ($shopId) {
+                    $loyaltyCard = \App\Models\LoyaltyCard::find($redemption->loyalty_card_id);
+                    return $loyaltyCard && $loyaltyCard->shop_id == $shopId;
+                });
+
+                $shopAmountDue = $shopPendingRedemptions->count() * 100;
+                $oldestDue = $shopPendingRedemptions->min('created_at');
+
+                $shopsDetailed[] = [
+                    'id' => $shop->id,
+                    'name' => $shop->name,
+                    'logo' => $shop->images ? asset('storage/' . (str_contains($shop->images[0], 'storage/') ? str_replace('storage/', '', $shop->images[0]) : $shop->images[0])) : null,
+                    'pending_count' => $shopPendingRedemptions->count(),
+                    'amount_due' => $shopAmountDue,
+                    'oldest_due' => $oldestDue ? \Carbon\Carbon::parse($oldestDue) : now(),
+                ];
+            }
+        }
+
+        // Sort by amount due (highest first)
+        usort($shopsDetailed, function($a, $b) {
+            return $b['amount_due'] <=> $a['amount_due'];
+        });
 
         $oldestDue = $pendingRedemptions->min('created_at');
         $oldestDueDays = $oldestDue ? now()->diffInDays($oldestDue) : 0;
@@ -99,8 +128,9 @@ class AdvertisementPageController extends Controller
         $stats['payment_due'] = [
             'total_amount' => $totalAmountDue,
             'pending_redemptions' => $pendingRedemptions->count(),
-            'affected_shops' => $affectedShops,
+            'affected_shops' => $affectedShopIds->count(),
             'oldest_due_days' => $oldestDueDays,
+            'shops_detailed' => $shopsDetailed,
         ];
 
         return view('ads.index', [

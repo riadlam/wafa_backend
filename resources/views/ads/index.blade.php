@@ -226,6 +226,78 @@
               <div style="font-size:12px;">Days Since Oldest</div>
             </div>
           </div>
+
+          <!-- Shops with Payment Due Table -->
+          @if(!empty($stats['payment_due']['shops_detailed']))
+          <div style="margin-top:20px;">
+            <h5 style="margin:0 0 12px; font-size:14px; font-weight:600;">🏪 Shops with Outstanding Payments</h5>
+            <div style="background:#fff; border-radius:8px; overflow:hidden; box-shadow:0 2px 8px rgba(0,0,0,0.1);">
+              <table style="width:100%; border-collapse:collapse;">
+                <thead style="background:#f8fafc;">
+                  <tr>
+                    <th style="text-align:left; padding:12px 16px; font-size:12px; font-weight:600; color:#374151; text-transform:uppercase; letter-spacing:0.05em; border-bottom:1px solid #e5e7eb;">Shop Name</th>
+                    <th style="text-align:center; padding:12px 16px; font-size:12px; font-weight:600; color:#374151; text-transform:uppercase; letter-spacing:0.05em; border-bottom:1px solid #e5e7eb;">Pending Redemptions</th>
+                    <th style="text-align:center; padding:12px 16px; font-size:12px; font-weight:600; color:#374151; text-transform:uppercase; letter-spacing:0.05em; border-bottom:1px solid #e5e7eb;">Amount Due (DA)</th>
+                    <th style="text-align:center; padding:12px 16px; font-size:12px; font-weight:600; color:#374151; text-transform:uppercase; letter-spacing:0.05em; border-bottom:1px solid #e5e7eb;">Oldest Due</th>
+                    <th style="text-align:center; padding:12px 16px; font-size:12px; font-weight:600; color:#374151; text-transform:uppercase; letter-spacing:0.05em; border-bottom:1px solid #e5e7eb;">Status</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  @foreach($stats['payment_due']['shops_detailed'] as $shopDetail)
+                  <tr style="border-bottom:1px solid #e5e7eb;" class="hover:bg-gray-50">
+                    <td style="padding:12px 16px; font-weight:500; color:#111827;">
+                      <div style="display:flex; align-items:center;">
+                        @if($shopDetail['logo'])
+                        <img src="{{ $shopDetail['logo'] }}" alt="Logo" style="width:32px; height:32px; border-radius:50%; margin-right:12px; object-fit:cover;" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                        <div style="width:32px; height:32px; background:#10b981; border-radius:50%; margin-right:12px; display:flex; align-items:center; justify-content:center; color:#fff; font-size:14px;">
+                          🏪
+                        </div>
+                        @else
+                        <div style="width:32px; height:32px; background:#10b981; border-radius:50%; margin-right:12px; display:flex; align-items:center; justify-content:center; color:#fff; font-size:14px;">
+                          🏪
+                        </div>
+                        @endif
+                        <div>
+                          <div style="font-weight:600;">{{ $shopDetail['name'] }}</div>
+                          <div style="font-size:12px; color:#6b7280;">ID: {{ $shopDetail['id'] }}</div>
+                        </div>
+                      </div>
+                    </td>
+                    <td style="padding:12px 16px; text-align:center; font-weight:600; color:#111827;">
+                      {{ $shopDetail['pending_count'] }}
+                    </td>
+                    <td style="padding:12px 16px; text-align:center;">
+                      <span style="font-weight:700; color:#dc2626;">{{ $shopDetail['amount_due'] }} DA</span>
+                    </td>
+                    <td style="padding:12px 16px; text-align:center; font-size:12px; color:#6b7280;">
+                      {{ $shopDetail['oldest_due']->diffForHumans() }}
+                    </td>
+                    <td style="padding:12px 16px; text-align:center;">
+                      @if($shopDetail['amount_due'] > 100)
+                      <span style="display:inline-block; padding:4px 8px; background:#dc2626; color:#fff; border-radius:12px; font-size:10px; font-weight:600;">
+                        HIGH PRIORITY
+                      </span>
+                      @elseif($shopDetail['amount_due'] > 50)
+                      <span style="display:inline-block; padding:4px 8px; background:#f59e0b; color:#fff; border-radius:12px; font-size:10px; font-weight:600;">
+                        MEDIUM
+                      </span>
+                      @else
+                      <span style="display:inline-block; padding:4px 8px; background:#10b981; color:#fff; border-radius:12px; font-size:10px; font-weight:600;">
+                        LOW
+                      </span>
+                      @endif
+                    </td>
+                  </tr>
+                  @endforeach
+                </tbody>
+              </table>
+            </div>
+
+            <div style="margin-top:12px; font-size:12px; color:#6b7280; text-align:center;">
+              📊 Showing {{ count($stats['payment_due']['shops_detailed']) }} shops with outstanding payments
+            </div>
+          </div>
+          @endif
         </div>
       </div>
 
