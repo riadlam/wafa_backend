@@ -1,4 +1,15 @@
 <!DOCTYPE html>
+@php
+function getImageUrl($imagePath) {
+    if (!$imagePath) return '';
+
+    // If the path already contains 'storage/', remove it to avoid duplication
+    $cleanPath = str_contains($imagePath, 'storage/') ? str_replace('storage/', '', $imagePath) : $imagePath;
+
+    // Return the asset URL
+    return asset('storage/' . $cleanPath);
+}
+@endphp
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -83,9 +94,9 @@
                                         @if($shopOwner->shops->first() && $shopOwner->shops->first()->images)
                                             <div class="flex-shrink-0 h-10 w-10">
                                                 <img class="h-10 w-10 rounded-full object-cover"
-                                                     src="/storage/{{ $shopOwner->shops->first()->images[0] ?? '' }}"
+                                                     src="{{ getImageUrl($shopOwner->shops->first()->images[0] ?? '') }}"
                                                      alt="{{ $shopOwner->name }}"
-                                                     onerror="this.style.display='none'; this.nextElementSibling.style.display='flex'">
+                                                     onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
                                                 <div class="h-10 w-10 bg-green-100 rounded-full flex items-center justify-center" style="display: none;">
                                                     <i class="fas fa-store text-green-600"></i>
                                                 </div>

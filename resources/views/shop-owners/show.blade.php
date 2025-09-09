@@ -1,4 +1,15 @@
 <!DOCTYPE html>
+@php
+function getImageUrl($imagePath) {
+    if (!$imagePath) return '';
+
+    // If the path already contains 'storage/', remove it to avoid duplication
+    $cleanPath = str_contains($imagePath, 'storage/') ? str_replace('storage/', '', $imagePath) : $imagePath;
+
+    // Return the asset URL
+    return asset('storage/' . $cleanPath);
+}
+@endphp
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -35,9 +46,10 @@
                 <div class="flex items-center space-x-4 mb-6">
                     @if($shop && $shop->images && count($shop->images) > 0)
                         <div class="relative">
-                            <img src="/storage/{{ $shop->images[0] }}" alt="{{ $shop->name }} Logo"
+                            <img src="{{ getImageUrl($shop->images[0]) }}"
+                                 alt="{{ $shop->name }} Logo"
                                  class="w-20 h-20 rounded-full object-cover border-4 border-orange-200 shadow-lg cursor-pointer hover:border-orange-300 transition-colors"
-                                 onclick="openImageModal('/storage/{{ $shop->images[0] }}', '{{ $shop->name }} Logo')">
+                                 onclick="openImageModal('{{ getImageUrl($shop->images[0]) }}', '{{ $shop->name }} Logo')"
                             <div class="absolute -bottom-1 -right-1 bg-orange-500 text-white text-xs px-2 py-1 rounded-full font-medium shadow-md">
                                 <i class="fas fa-crown"></i>
                             </div>
@@ -142,9 +154,10 @@
                     <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
                         @foreach($shop->images as $index => $image)
                         <div class="relative group">
-                            <img src="/storage/{{ $image }}" alt="Shop Image {{ $index + 1 }}"
+                            <img src="{{ getImageUrl($image) }}"
+                                 alt="Shop Image {{ $index + 1 }}"
                                  class="w-full h-32 object-cover rounded-lg border border-gray-200 hover:shadow-lg transition-shadow cursor-pointer"
-                                 onclick="openImageModal('/storage/{{ $image }}', 'Shop Image {{ $index + 1 }}')">
+                                 onclick="openImageModal('{{ getImageUrl($image) }}', 'Shop Image {{ $index + 1 }}')"
                             @if($index === 0)
                             <div class="absolute top-2 left-2 bg-orange-500 text-white text-xs px-2 py-1 rounded-full font-medium">
                                 <i class="fas fa-star mr-1"></i>Logo
