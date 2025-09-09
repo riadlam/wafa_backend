@@ -6,6 +6,8 @@ use App\Http\Controllers\Controller;
 use App\Models\User;
 use App\Models\UserLoyaltyCard;
 use App\Models\Stamp;
+use App\Models\Shop;
+use App\Models\RedemptionStatistic;
 use Illuminate\Http\Request;
 
 class UserManagementController extends Controller
@@ -37,10 +39,21 @@ class UserManagementController extends Controller
                        ->paginate(20)
                        ->withQueryString();
 
+        // Calculate statistics
+        $shopOwnerIds = Shop::pluck('user_id')->unique();
+        $totalUsers = User::whereNotIn('id', $shopOwnerIds)->count();
+        $totalShopOwners = $shopOwnerIds->count();
+        $totalStamps = Stamp::count();
+        $totalRedemptions = RedemptionStatistic::where('is_payed', 0)->count();
+
         return view('users.index', [
             'users' => $users,
             'search' => $search,
             'role' => $role,
+            'totalUsers' => $totalUsers,
+            'totalShopOwners' => $totalShopOwners,
+            'totalStamps' => $totalStamps,
+            'totalRedemptions' => $totalRedemptions,
         ]);
     }
 

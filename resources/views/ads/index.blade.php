@@ -40,6 +40,26 @@
         </div>
       </div>
 
+      <!-- Statistics Cards -->
+      <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(200px, 1fr)); gap:16px; margin-bottom:24px;">
+        <div class="card" style="text-align:center;">
+          <div style="font-size:24px; font-weight:700; color:#3b82f6; margin-bottom:4px;">{{ $totalUsers ?? 0 }}</div>
+          <div class="muted">Total Users</div>
+        </div>
+        <div class="card" style="text-align:center;">
+          <div style="font-size:24px; font-weight:700; color:#10b981; margin-bottom:4px;">{{ $totalShopOwners ?? 0 }}</div>
+          <div class="muted">Shop Owners</div>
+        </div>
+        <div class="card" style="text-align:center;">
+          <div style="font-size:24px; font-weight:700; color:#f59e0b; margin-bottom:4px;">{{ $totalStamps ?? 0 }}</div>
+          <div class="muted">Total Stamps</div>
+        </div>
+        <div class="card" style="text-align:center;">
+          <div style="font-size:24px; font-weight:700; color:#ef4444; margin-bottom:4px;">{{ $totalRedemptions ?? 0 }}</div>
+          <div class="muted">Total Redemptions</div>
+        </div>
+      </div>
+
       <div class="card" style="margin-bottom:16px;">
         <h2 style="margin:0 0 8px; font-size:16px;">Send notification to shop owners</h2>
         <form method="POST" action="/notify/owners" style="display:flex; gap:8px; flex-wrap:wrap; align-items:flex-end;">

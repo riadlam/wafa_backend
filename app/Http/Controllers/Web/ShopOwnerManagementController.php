@@ -6,6 +6,8 @@ use App\Http\Controllers\Controller;
 use App\Models\User;
 use App\Models\Shop;
 use App\Models\Category;
+use App\Models\RedemptionStatistic;
+use App\Models\Stamp;
 use Illuminate\Http\Request;
 
 class ShopOwnerManagementController extends Controller
@@ -44,11 +46,22 @@ class ShopOwnerManagementController extends Controller
         // Get all categories for filter dropdown
         $categories = Category::all();
 
+        // Calculate statistics
+        $shopOwnerIds = Shop::pluck('user_id')->unique();
+        $totalUsers = User::whereNotIn('id', $shopOwnerIds)->count();
+        $totalShopOwners = $shopOwnerIds->count();
+        $totalStamps = Stamp::count();
+        $totalRedemptions = RedemptionStatistic::where('is_payed', 0)->count();
+
         return view('shop-owners.index', [
             'shopOwners' => $shopOwners,
             'categories' => $categories,
             'search' => $search,
             'selectedCategory' => $category,
+            'totalUsers' => $totalUsers,
+            'totalShopOwners' => $totalShopOwners,
+            'totalStamps' => $totalStamps,
+            'totalRedemptions' => $totalRedemptions,
         ]);
     }
 

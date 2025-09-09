@@ -8,6 +8,8 @@ use App\Models\Advertisement;
 use App\Models\AdvertisementAudit;
 use App\Models\User;
 use App\Models\Shop;
+use App\Models\RedemptionStatistic;
+use App\Models\Stamp;
 use App\Services\FcmService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -25,9 +27,20 @@ class AdvertisementPageController extends Controller
 
         $ads = $query->paginate(20)->withQueryString();
 
+        // Calculate statistics
+        $shopOwnerIds = Shop::pluck('user_id')->unique();
+        $totalUsers = User::whereNotIn('id', $shopOwnerIds)->count();
+        $totalShopOwners = $shopOwnerIds->count();
+        $totalStamps = Stamp::count();
+        $totalRedemptions = RedemptionStatistic::where('is_payed', 0)->count();
+
         return view('ads.index', [
             'ads' => $ads,
             'status' => $status,
+            'totalUsers' => $totalUsers,
+            'totalShopOwners' => $totalShopOwners,
+            'totalStamps' => $totalStamps,
+            'totalRedemptions' => $totalRedemptions,
         ]);
     }
 

@@ -30,6 +30,26 @@
         </div>
 
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+            <!-- Statistics Cards -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+                <div class="bg-white rounded-lg shadow-sm p-6 text-center">
+                    <div class="text-3xl font-bold text-blue-600 mb-2">{{ $totalUsers ?? 0 }}</div>
+                    <div class="text-gray-600">Total Users</div>
+                </div>
+                <div class="bg-white rounded-lg shadow-sm p-6 text-center">
+                    <div class="text-3xl font-bold text-green-600 mb-2">{{ $totalShopOwners ?? 0 }}</div>
+                    <div class="text-gray-600">Shop Owners</div>
+                </div>
+                <div class="bg-white rounded-lg shadow-sm p-6 text-center">
+                    <div class="text-3xl font-bold text-orange-600 mb-2">{{ $totalStamps ?? 0 }}</div>
+                    <div class="text-gray-600">Total Stamps</div>
+                </div>
+                <div class="bg-white rounded-lg shadow-sm p-6 text-center">
+                    <div class="text-3xl font-bold text-red-600 mb-2">{{ $totalRedemptions ?? 0 }}</div>
+                    <div class="text-gray-600">Total Redemptions</div>
+                </div>
+            </div>
+
             <!-- Filters and Search -->
             <div class="bg-white rounded-lg shadow-sm p-6 mb-8">
                 <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
