@@ -109,6 +109,7 @@
               <th>Shop</th>
               <th>Owner</th>
               <th>Title</th>
+              <th>Description</th>
               <th>Status</th>
               <th>Targets</th>
               <th>Delivered</th>
@@ -123,6 +124,9 @@
                 <td class="muted">{{ optional($ad->shop)->name ?? 'Shop #'.$ad->shop_id }}</td>
                 <td class="muted">User #{{ $ad->owner_user_id }}</td>
                 <td class="title">{{ $ad->title }}</td>
+                <td class="muted" style="max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+                  {{ Str::limit($ad->description, 50) }}
+                </td>
                 <td>
                   <span class="badge badge-{{ $ad->status }}">{{ ucfirst($ad->status) }}</span>
                 </td>
