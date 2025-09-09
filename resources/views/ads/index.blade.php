@@ -40,22 +40,30 @@
         </div>
       </div>
 
-      <!-- Statistics Cards -->
+      <!-- Overall Statistics Cards -->
       <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(200px, 1fr)); gap:16px; margin-bottom:24px;">
         <div class="card" style="text-align:center;">
-          <div style="font-size:24px; font-weight:700; color:#3b82f6; margin-bottom:4px;">{{ $totalUsers ?? 0 }}</div>
+          <div style="font-size:24px; font-weight:700; color:#3b82f6; margin-bottom:4px;">
+            {{ ($stats['today']['users'] ?? 0) + ($stats['last_15_days']['users'] ?? 0) }}
+          </div>
           <div class="muted">Total Users</div>
         </div>
         <div class="card" style="text-align:center;">
-          <div style="font-size:24px; font-weight:700; color:#10b981; margin-bottom:4px;">{{ $totalShopOwners ?? 0 }}</div>
-          <div class="muted">Shop Owners</div>
+          <div style="font-size:24px; font-weight:700; color:#10b981; margin-bottom:4px;">
+            {{ ($stats['today']['shops'] ?? 0) + ($stats['last_15_days']['shops'] ?? 0) }}
+          </div>
+          <div class="muted">Total Shops</div>
         </div>
         <div class="card" style="text-align:center;">
-          <div style="font-size:24px; font-weight:700; color:#f59e0b; margin-bottom:4px;">{{ $totalStamps ?? 0 }}</div>
+          <div style="font-size:24px; font-weight:700; color:#f59e0b; margin-bottom:4px;">
+            {{ ($stats['today']['stamps'] ?? 0) + ($stats['last_15_days']['stamps'] ?? 0) }}
+          </div>
           <div class="muted">Total Stamps</div>
         </div>
         <div class="card" style="text-align:center;">
-          <div style="font-size:24px; font-weight:700; color:#ef4444; margin-bottom:4px;">{{ $totalRedemptions ?? 0 }}</div>
+          <div style="font-size:24px; font-weight:700; color:#ef4444; margin-bottom:4px;">
+            {{ ($stats['today']['redemptions'] ?? 0) + ($stats['last_15_days']['redemptions'] ?? 0) }}
+          </div>
           <div class="muted">Total Redemptions</div>
         </div>
       </div>
@@ -101,6 +109,126 @@
         <a href="/?status=sent" class="{{ $status === 'sent' ? 'active' : '' }}">Sent</a>
         <a href="/?status=failed" class="{{ $status === 'failed' ? 'active' : '' }}">Failed</a>
       </div>
+      <div class="card" style="margin-bottom:16px;">
+        <h3 style="margin:0 0 16px; font-size:18px; font-weight:600; color:#111827;">📊 Dashboard Insights</h3>
+        <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(250px, 1fr)); gap:16px; margin-bottom:16px;">
+          <!-- Today's Statistics -->
+          <div style="background:linear-gradient(135deg, #667eea 0%, #764ba2 100%); color:#fff; padding:20px; border-radius:12px;">
+            <h4 style="margin:0 0 12px; font-size:14px; font-weight:500;">📅 Today</h4>
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+              <span style="font-size:12px;">Users:</span>
+              <span style="font-weight:600;">{{ $stats['today']['users'] ?? 0 }}</span>
+            </div>
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+              <span style="font-size:12px;">Shops:</span>
+              <span style="font-weight:600;">{{ $stats['today']['shops'] ?? 0 }}</span>
+            </div>
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+              <span style="font-size:12px;">Stamps:</span>
+              <span style="font-weight:600;">{{ $stats['today']['stamps'] ?? 0 }}</span>
+            </div>
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+              <span style="font-size:12px;">Redemptions:</span>
+              <span style="font-weight:600;">{{ $stats['today']['redemptions'] ?? 0 }}</span>
+            </div>
+          </div>
+
+          <!-- Yesterday Comparison -->
+          <div style="background:linear-gradient(135deg, #f093fb 0%, #f5576c 100%); color:#fff; padding:20px; border-radius:12px;">
+            <h4 style="margin:0 0 12px; font-size:14px; font-weight:500;">📊 vs Yesterday</h4>
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+              <span style="font-size:12px;">Users:</span>
+              <span style="font-weight:600; color:{{ ($stats['yesterday_comparison']['users'] ?? 0) >= 0 ? '#10b981' : '#ef4444' }}">
+                {{ ($stats['yesterday_comparison']['users'] ?? 0) >= 0 ? '+' : '' }}{{ $stats['yesterday_comparison']['users'] ?? 0 }}
+              </span>
+            </div>
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+              <span style="font-size:12px;">Shops:</span>
+              <span style="font-weight:600; color:{{ ($stats['yesterday_comparison']['shops'] ?? 0) >= 0 ? '#10b981' : '#ef4444' }}">
+                {{ ($stats['yesterday_comparison']['shops'] ?? 0) >= 0 ? '+' : '' }}{{ $stats['yesterday_comparison']['shops'] ?? 0 }}
+              </span>
+            </div>
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+              <span style="font-size:12px;">Stamps:</span>
+              <span style="font-weight:600; color:{{ ($stats['yesterday_comparison']['stamps'] ?? 0) >= 0 ? '#10b981' : '#ef4444' }}">
+                {{ ($stats['yesterday_comparison']['stamps'] ?? 0) >= 0 ? '+' : '' }}{{ $stats['yesterday_comparison']['stamps'] ?? 0 }}
+              </span>
+            </div>
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+              <span style="font-size:12px;">Redemptions:</span>
+              <span style="font-weight:600; color:{{ ($stats['yesterday_comparison']['redemptions'] ?? 0) >= 0 ? '#10b981' : '#ef4444' }}">
+                {{ ($stats['yesterday_comparison']['redemptions'] ?? 0) >= 0 ? '+' : '' }}{{ $stats['yesterday_comparison']['redemptions'] ?? 0 }}
+              </span>
+            </div>
+          </div>
+
+          <!-- Last 15 Days -->
+          <div style="background:linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); color:#fff; padding:20px; border-radius:12px;">
+            <h4 style="margin:0 0 12px; font-size:14px; font-weight:500;">📈 Last 15 Days</h4>
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+              <span style="font-size:12px;">Users:</span>
+              <span style="font-weight:600;">{{ $stats['last_15_days']['users'] ?? 0 }}</span>
+            </div>
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+              <span style="font-size:12px;">Shops:</span>
+              <span style="font-weight:600;">{{ $stats['last_15_days']['shops'] ?? 0 }}</span>
+            </div>
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+              <span style="font-size:12px;">Stamps:</span>
+              <span style="font-weight:600;">{{ $stats['last_15_days']['stamps'] ?? 0 }}</span>
+            </div>
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+              <span style="font-size:12px;">Redemptions:</span>
+              <span style="font-weight:600;">{{ $stats['last_15_days']['redemptions'] ?? 0 }}</span>
+            </div>
+          </div>
+
+          <!-- Last Month -->
+          <div style="background:linear-gradient(135deg, #43e97b 0%, #38f9d7 100%); color:#fff; padding:20px; border-radius:12px;">
+            <h4 style="margin:0 0 12px; font-size:14px; font-weight:500;">📊 Last Month</h4>
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+              <span style="font-size:12px;">Users:</span>
+              <span style="font-weight:600;">{{ $stats['last_month']['users'] ?? 0 }}</span>
+            </div>
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+              <span style="font-size:12px;">Shops:</span>
+              <span style="font-weight:600;">{{ $stats['last_month']['shops'] ?? 0 }}</span>
+            </div>
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+              <span style="font-size:12px;">Stamps:</span>
+              <span style="font-weight:600;">{{ $stats['last_month']['stamps'] ?? 0 }}</span>
+            </div>
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+              <span style="font-size:12px;">Redemptions:</span>
+              <span style="font-weight:600;">{{ $stats['last_month']['redemptions'] ?? 0 }}</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Payment Due Insights -->
+        <div style="background:linear-gradient(135deg, #fa709a 0%, #fee140 100%); color:#fff; padding:20px; border-radius:12px; margin-bottom:16px;">
+          <h4 style="margin:0 0 12px; font-size:16px; font-weight:600;">💰 Payment Due Insights</h4>
+          <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(200px, 1fr)); gap:16px;">
+            <div>
+              <div style="font-size:24px; font-weight:700; margin-bottom:4px;">{{ $stats['payment_due']['total_amount'] ?? 0 }} DA</div>
+              <div style="font-size:12px;">Total Due</div>
+            </div>
+            <div>
+              <div style="font-size:24px; font-weight:700; margin-bottom:4px;">{{ $stats['payment_due']['pending_redemptions'] ?? 0 }}</div>
+              <div style="font-size:12px;">Pending Redemptions</div>
+            </div>
+            <div>
+              <div style="font-size:24px; font-weight:700; margin-bottom:4px;">{{ $stats['payment_due']['affected_shops'] ?? 0 }}</div>
+              <div style="font-size:12px;">Shops Affected</div>
+            </div>
+            <div>
+              <div style="font-size:24px; font-weight:700; margin-bottom:4px;">{{ $stats['payment_due']['oldest_due_days'] ?? 0 }}</div>
+              <div style="font-size:12px;">Days Since Oldest</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
       <div class="card">
         <table>
           <thead>

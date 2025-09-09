@@ -27,20 +27,86 @@ class AdvertisementPageController extends Controller
 
         $ads = $query->paginate(20)->withQueryString();
 
-        // Calculate statistics
+        // Calculate comprehensive statistics
         $shopOwnerIds = Shop::pluck('user_id')->unique();
-        $totalUsers = User::whereNotIn('id', $shopOwnerIds)->count();
-        $totalShopOwners = $shopOwnerIds->count();
-        $totalStamps = Stamp::count();
-        $totalRedemptions = RedemptionStatistic::where('is_payed', 0)->count();
+
+        // Helper function to get stats for date range
+        $getStatsForPeriod = function ($startDate, $endDate = null) use ($shopOwnerIds) {
+            $query = User::whereNotIn('id', $shopOwnerIds);
+            if ($startDate) $query->whereDate('created_at', '>=', $startDate);
+            if ($endDate) $query->whereDate('created_at', '<=', $endDate);
+
+            $users = $query->count();
+
+            $shopsQuery = Shop::query();
+            if ($startDate) $shopsQuery->whereDate('created_at', '>=', $startDate);
+            if ($endDate) $shopsQuery->whereDate('created_at', '<=', $endDate);
+            $shops = $shopsQuery->count();
+
+            $stampsQuery = Stamp::query();
+            if ($startDate) $stampsQuery->whereDate('created_at', '>=', $startDate);
+            if ($endDate) $stampsQuery->whereDate('created_at', '<=', $endDate);
+            $stamps = $stampsQuery->count();
+
+            $redemptionsQuery = RedemptionStatistic::query();
+            if ($startDate) $redemptionsQuery->whereDate('created_at', '>=', $startDate);
+            if ($endDate) $redemptionsQuery->whereDate('created_at', '<=', $endDate);
+            $redemptions = $redemptionsQuery->where('is_payed', 0)->count();
+
+            return [
+                'users' => $users,
+                'shops' => $shops,
+                'stamps' => $stamps,
+                'redemptions' => $redemptions,
+            ];
+        };
+
+        // Today's statistics
+        $today = now()->toDateString();
+        $stats['today'] = $getStatsForPeriod($today);
+
+        // Yesterday's statistics for comparison
+        $yesterday = now()->subDay()->toDateString();
+        $yesterdayStats = $getStatsForPeriod($yesterday);
+
+        // Calculate differences
+        $stats['yesterday_comparison'] = [
+            'users' => $stats['today']['users'] - $yesterdayStats['users'],
+            'shops' => $stats['today']['shops'] - $yesterdayStats['shops'],
+            'stamps' => $stats['today']['stamps'] - $yesterdayStats['stamps'],
+            'redemptions' => $stats['today']['redemptions'] - $yesterdayStats['redemptions'],
+        ];
+
+        // Last 15 days statistics
+        $fifteenDaysAgo = now()->subDays(15)->toDateString();
+        $stats['last_15_days'] = $getStatsForPeriod($fifteenDaysAgo);
+
+        // Last month statistics
+        $oneMonthAgo = now()->subMonth()->toDateString();
+        $stats['last_month'] = $getStatsForPeriod($oneMonthAgo);
+
+        // Payment due insights
+        $pendingRedemptions = RedemptionStatistic::where('is_payed', 0)->get();
+        $totalAmountDue = $pendingRedemptions->count() * 100; // 100 DA per redemption
+
+        $affectedShops = $pendingRedemptions->pluck('loyalty_card_id')->unique()->map(function ($cardId) {
+            return \App\Models\LoyaltyCard::find($cardId)?->shop_id;
+        })->filter()->unique()->count();
+
+        $oldestDue = $pendingRedemptions->min('created_at');
+        $oldestDueDays = $oldestDue ? now()->diffInDays($oldestDue) : 0;
+
+        $stats['payment_due'] = [
+            'total_amount' => $totalAmountDue,
+            'pending_redemptions' => $pendingRedemptions->count(),
+            'affected_shops' => $affectedShops,
+            'oldest_due_days' => $oldestDueDays,
+        ];
 
         return view('ads.index', [
             'ads' => $ads,
             'status' => $status,
-            'totalUsers' => $totalUsers,
-            'totalShopOwners' => $totalShopOwners,
-            'totalStamps' => $totalStamps,
-            'totalRedemptions' => $totalRedemptions,
+            'stats' => $stats,
         ]);
     }
 
