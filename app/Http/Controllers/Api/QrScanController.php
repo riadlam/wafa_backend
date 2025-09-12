@@ -15,7 +15,9 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Broadcast;
+use Illuminate\Support\Facades\Http;
 use App\Events\MessageSent;
+use App\Services\FcmService;
 
 
 class QrScanController extends Controller
@@ -307,10 +309,13 @@ class QrScanController extends Controller
                 'stamp_reset' => $stampReset
             ]));
 
+            // Send push notification to the user in French
+            $this->_sendStampNotification($user, $shop, $newStampCount, $loyaltyCard->total_stamps, $stampReset);
+
             return response()->json([
                 'status' => 'success',
-                'message' => $stampReset 
-                    ? 'Stamp added successfully! Loyalty card has been reset.' 
+                'message' => $stampReset
+                    ? 'Stamp added successfully! Loyalty card has been reset.'
                     : 'Stamp added successfully!',
                 'data' => [
                     'user_loyalty_card' => $userLoyaltyCard->load('loyaltyCard'),
@@ -321,5 +326,106 @@ class QrScanController extends Controller
                 ]
             ]);
         });
+    }
+
+    /**
+     * Send push notification to user when they receive a stamp
+     *
+     * @param User $user
+     * @param Shop $shop
+     * @param int $currentStamps
+     * @param int $totalStamps
+     * @param bool $stampReset
+     * @return void
+     */
+    private function _sendStampNotification($user, $shop, $currentStamps, $totalStamps, $stampReset)
+    {
+        try {
+            // Get user's FCM tokens
+            $tokens = $user->fcm_tokens ?? [];
+            if (empty($tokens) || !is_array($tokens)) {
+                return; // No tokens to send to
+            }
+
+            // Prepare notification content in French
+            if ($stampReset) {
+                $title = "🎉 Félicitations !";
+                $body = "Vous avez complété votre carte de fidélité chez {$shop->name} ! 🎊";
+            } else {
+                $title = "✨ Nouveau tampon !";
+                $body = "Vous avez reçu un tampon chez {$shop->name} ! Statut : {$currentStamps}/{$totalStamps}";
+            }
+
+            // Get FCM service
+            $fcmService = app(FcmService::class);
+            $projectId = env('FCM_PROJECT_ID');
+
+            if (!$projectId) {
+                return; // FCM not configured
+            }
+
+            $accessToken = $fcmService->getAccessToken();
+
+            // Send notification to all user's tokens
+            foreach ($tokens as $token) {
+                if (!empty($token)) {
+                    try {
+                        $response = Http::withHeaders([
+                            'Authorization' => 'Bearer ' . $accessToken,
+                            'Content-Type' => 'application/json',
+                        ])->post("https://fcm.googleapis.com/v1/projects/{$projectId}/messages:send", [
+                            'message' => [
+                                'token' => $token,
+                                'notification' => [
+                                    'title' => $title,
+                                    'body' => $body,
+                                ],
+                                'data' => [
+                                    'type' => 'stamp_received',
+                                    'shop_name' => $shop->name,
+                                    'current_stamps' => (string)$currentStamps,
+                                    'total_stamps' => (string)$totalStamps,
+                                    'stamp_reset' => $stampReset ? 'true' : 'false',
+                                    'route' => '/cards',
+                                ],
+                                'android' => [
+                                    'notification' => [
+                                        'sound' => 'default',
+                                        'priority' => 'high',
+                                    ],
+                                ],
+                                'apns' => [
+                                    'payload' => [
+                                        'aps' => [
+                                            'sound' => 'default',
+                                            'badge' => 1,
+                                        ],
+                                    ],
+                                ],
+                            ],
+                        ]);
+
+                        if (!$response->successful()) {
+                            \Log::warning('Failed to send stamp notification to token', [
+                                'token' => substr($token, 0, 20) . '...',
+                                'response' => $response->body()
+                            ]);
+                        }
+                    } catch (\Exception $e) {
+                        \Log::error('Error sending stamp notification', [
+                            'token' => substr($token, 0, 20) . '...',
+                            'error' => $e->getMessage()
+                        ]);
+                    }
+                }
+            }
+
+        } catch (\Exception $e) {
+            \Log::error('Error in _sendStampNotification', [
+                'user_id' => $user->id,
+                'shop_id' => $shop->id,
+                'error' => $e->getMessage()
+            ]);
+        }
     }
 }
